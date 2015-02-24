@@ -11,8 +11,8 @@ classdef IBayesianProblem
  	 
 
 	properties (Abstract)         
-        independentData % numeric
-        dependentData   % numeric     
+        independentData % numeric, e.g., times
+        dependentData   % numeric, e.g., densities = f(time)
         paramsManager   % mlbayesian.IBayesianParameters
         mcmc            % mlbayesian.IMCMC
         bestFitParams   % numeric
@@ -20,9 +20,9 @@ classdef IBayesianProblem
 
 	methods (Abstract)
         estimateParameters(this)
-  		sumSquaredErrors(this)
-        estimateData(this)
-        estimateDataFast(this)
+  		sumSquaredErrors(this) % merit function
+        estimateData(this)     % objective interface for human readability
+        estimateDataFast(this) % speed-optimal interface
  	end 
 
 	%  Created with Newcl by John J. Lee after newfcn by Frank Gonzalez-Morphy 

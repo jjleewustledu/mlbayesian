@@ -17,7 +17,7 @@ classdef AbstractMcmcProblem < mlbayesian.AbstractBayesianProblem
     end
     
     properties (Dependent)
-        length
+        length % of dependent_data = f(time_interpolants), which must have the same array sizes
         timeInterpolants
     end
     
