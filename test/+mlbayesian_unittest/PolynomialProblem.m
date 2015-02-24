@@ -9,6 +9,10 @@ classdef PolynomialProblem < mlbayesian.AbstractBayesianProblem
  	%  developed on Matlab 8.3.0.532 (R2014a) 
  	%  $Id$ 
     
+    properties
+        showPlots = true
+    end
+    
 	methods 
         function this = PolynomialProblem(t, y)
             this = this@mlbayesian.AbstractBayesianProblem(t, y);
