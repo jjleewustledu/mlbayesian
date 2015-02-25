@@ -1,5 +1,5 @@
 classdef IBayesianProblem  
-	%% IBAYESIANPROBLEM   
+	%% IBAYESIANPROBLEM is used by IMCMC, MCMC; most properties and some methods are requested by MCMC   
 
 	%  $Revision$ 
  	%  was created $Date$ 
@@ -15,7 +15,8 @@ classdef IBayesianProblem
         dependentData   % numeric, e.g., densities = f(time)
         paramsManager   % mlbayesian.IBayesianParameters
         mcmc            % mlbayesian.IMCMC
-        bestFitParams   % numeric
+        bestFitParams   % numeric 
+        showPlots       % boolean
  	end 
 
 	methods (Abstract)
@@ -23,6 +24,7 @@ classdef IBayesianProblem
   		sumSquaredErrors(this) % merit function
         estimateData(this)     % objective interface for human readability
         estimateDataFast(this) % speed-optimal interface
+        finalParams(this)
  	end 
 
 	%  Created with Newcl by John J. Lee after newfcn by Frank Gonzalez-Morphy 

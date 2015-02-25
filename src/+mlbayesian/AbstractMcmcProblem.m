@@ -1,5 +1,8 @@
 classdef AbstractMcmcProblem < mlbayesian.AbstractBayesianProblem 
 	%% ABSTRACTMCMCPROBLEM   
+    %  Yet abstract:
+    %      properties baseTitle, xLabel, yLabel, showPlots
+    %      methods estimateParameters, estimateData, estimateDataFast
 
 	%  $Revision$ 
  	%  was created $Date$ 
@@ -30,7 +33,6 @@ classdef AbstractMcmcProblem < mlbayesian.AbstractBayesianProblem
         end
     end
 
-
 	methods 		  
  		function this = AbstractMcmcProblem(varargin) 
  			%% ABSTRACTMCMCPROBLEM 
@@ -39,9 +41,9 @@ classdef AbstractMcmcProblem < mlbayesian.AbstractBayesianProblem
  			this = this@mlbayesian.AbstractBayesianProblem(varargin{:}); 
  		end 
         function this = runMcmc(this, paramsMap)
-            %% RUNMCMC 
+            %% RUNMCMC should be run from within method estimateParameters, implemented as below
             %  Usage:  map = containers.Map
-            %          map('param') = struct('fixed', 0, 'min', eps, 'mean', 1, 'max',  10)
+            %          map('some_param') = struct('fixed', 0, 'min', eps, 'mean', 1, 'max',  10)
             %          this = this.runMcmc(map)
             
             import mlbayesian.*;

@@ -1,5 +1,8 @@
 classdef AbstractBayesianProblem < mlbayesian.IBayesianProblem 
-	%% ABSTRACTBAYESIANPROBLEM   
+	%% ABSTRACTBAYESIANPROBLEM  
+    %  Yet abstract:   
+    %      properties showPlots
+    %      methods estimateParameters, estimateData, estimateDataFast
 
 	%  $Revision$ 
  	%  was created $Date$ 
@@ -8,10 +11,6 @@ classdef AbstractBayesianProblem < mlbayesian.IBayesianProblem
  	%  and checked into repository $URL$,  
  	%  developed on Matlab 8.3.0.532 (R2014a) 
  	%  $Id$ 
-    
-    properties (Abstract)       
-        showPlots
-    end
     
     properties         
         independentData % numeric, e.g., times
@@ -40,9 +39,8 @@ classdef AbstractBayesianProblem < mlbayesian.IBayesianProblem
             addOptional(p,   'depData', [], @isnumeric);
             parse(p, varargin{:});            
  			
-            this.independentData           = p.Results.indepData;
-            this.dependentData             = p.Results.depData;
-            this.normSquaredDependentData_ = norm(this.dependentData)^2;
+            this.independentData = p.Results.indepData;
+            this.dependentData   = p.Results.depData;
             assert(all(size(this.independentData) == size(this.dependentData)));
         end 
         function sse  = sumSquaredErrors(this, p)
@@ -54,10 +52,6 @@ classdef AbstractBayesianProblem < mlbayesian.IBayesianProblem
         end 
     end
     
-    properties (Access = 'protected')
-        normSquaredDependentData_
-    end
-
 	%  Created with Newcl by John J. Lee after newfcn by Frank Gonzalez-Morphy 
 end
 

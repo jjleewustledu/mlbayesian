@@ -9,7 +9,7 @@ classdef IMCMC
  	%  developed on Matlab 8.3.0.532 (R2014a) 
  	%  $Id$ 
     
-	properties (Abstract, Constant)
+	properties (Abstract)
         NPROPOSALS % number of loops in parameter prob phase
         NPOP       % number of population
         NPOPREP    % number of population to replace

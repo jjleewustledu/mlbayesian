@@ -10,6 +10,12 @@ classdef BayesianParameters < mlbayesian.IBayesianParameters
  	%  $Id$  	 
     
     properties        
+        NPROPOSALS = 100   % number of loops in parameter prob phase
+        NPOP       =  50   % number of population
+        NPOPREP    =   5   % number of population to replace
+        NBETA      =  50   % number of temperature steps
+        NANNEAL    =  20   % number of loops per annealing temp
+        
         paramsMap     % parameter name to struct('fixed', 0, 'min', eps, 'mean', 1, 'max',  10
         paramsIndices % parameter name to unique integer index
     end

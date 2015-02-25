@@ -1,5 +1,5 @@
-classdef PolynomialProblem < mlbayesian.AbstractBayesianProblem
-	%% POLYNOMIALPROBLEM is for testing IMCMC implementation
+classdef PolynomialMcmcProblem < mlbayesian.AbstractMcmcProblem
+	%% POLYNOMIALPROBLEM is for testing AbstractMcmcProblem implementations
 
 	%  $Revision$ 
  	%  was created $Date$ 
@@ -11,11 +11,14 @@ classdef PolynomialProblem < mlbayesian.AbstractBayesianProblem
     
     properties
         showPlots = true
+        baseTitle = 'PolynomialMcmcProblem'
+        xLabel    = 'ordinate'
+        yLabel    = 'abscissa'
     end
     
 	methods 
-        function this = PolynomialProblem(t, y)
-            this = this@mlbayesian.AbstractBayesianProblem(t, y);
+        function this = PolynomialMcmcProblem(t, y)
+            this = this@mlbayesian.AbstractMcmcProblem(t, y);
         end
         function this = estimateParameters(this)
             

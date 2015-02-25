@@ -1,18 +1,18 @@
-classdef Test_MCMC < matlab.unittest.TestCase
-	%% TEST_MCMC  
-    %
-    %  Usage:  >> results = run(mlbayesian_unittest.Test_MCMC)
-	%          >> result  = run(mlbayesian_unittest.Test_MCMC, 'test_dt')
-	%  See also:  file:///Applications/Developer/MATLAB_R2014a.app/help/matlab/matlab-unit-test-framework.html
-    %
+classdef Test_AbstractBayesianProblem < matlab.unittest.TestCase 
+	%% TEST_ABSTRACTBAYESIANPROBLEM  
+
+	%  Usage:  >> results = run(mlbayesian_unittest.Test_AbstractBayesianProblem)
+ 	%          >> result  = run(mlbayesian_unittest.Test_AbstractBayesianProblem, 'test_dt')
+ 	%  See also:  file:///Applications/Developer/MATLAB_R2014b.app/help/matlab/matlab-unit-test-framework.html
+
 	%  $Revision$ 
  	%  was created $Date$ 
  	%  by $Author$,  
  	%  last modified $LastChangedDate$ 
  	%  and checked into repository $URL$,  
- 	%  developed on Matlab 8.3.0.532 (R2014a) 
+ 	%  developed on Matlab 8.4.0.150421 (R2014b) 
  	%  $Id$ 
- 	 
+
     properties 
         testProblem = 'polynomial';
     end
@@ -35,12 +35,12 @@ classdef Test_MCMC < matlab.unittest.TestCase
             t = 0:20;
             y = 1 + 2*t + 3*t.^2;
             
-            pmcmc = mlbayesian_unittest.PolynomialMCMC(t, y);
-            pmcmc = pmcmc.estimateParameters;
-            y1    = pmcmc.estimateData;
+            pbp = mlbayesian_unittest.PolynomialBayesianProblem(t, y);
+            pbp = pbp.estimateParameters;
+            y1  = pbp.estimateData;
         end
     end
-    
+
 	%  Created with Newcl by John J. Lee after newfcn by Frank Gonzalez-Morphy 
-end
+ end 
 

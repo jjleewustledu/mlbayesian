@@ -9,7 +9,7 @@ classdef MCMC < mlbayesian.IMCMC
  	%  developed on Matlab 8.3.0.532 (R2014a) 
  	%  $Id$ 
 
-    properties (Constant)
+    properties
         NPROPOSALS = 100   % number of loops in parameter prob phase
         NPOP       =  50   % number of population
         NPOPREP    =   5   % number of population to replace
@@ -20,9 +20,7 @@ classdef MCMC < mlbayesian.IMCMC
         FRACPEEK   =   0.2
         PARPEN     =   0.0 % -1.0 % minimal penalty for each param (unused)
         LRG        =   1.0e20
-    end
-    
-    properties
+
         dependentData        
         paramsData   
         paramsBetas   
@@ -77,6 +75,12 @@ classdef MCMC < mlbayesian.IMCMC
             addRequired(p, 'paramsDat', @(x) isa(x, 'mlbayesian.IBayesianParameters'));
             parse(p, bayesProb, depDat, paramsDat);            
             
+            this.NPROPOSALS        = p.Results.paramsDat.NPROPOSALS;
+            this.NPOP              = p.Results.paramsDat.NPOP;
+            this.NPOPREP           = p.Results.paramsDat.NPOPREP;
+            this.NBETA             = p.Results.paramsDat.NBETA;
+            this.NANNEAL           = p.Results.paramsDat.NANNEAL;
+        
             this.bayesianProblem_  = p.Results.bayesProb;
             this.dependentData     = p.Results.depDat;
             this.paramsData        = p.Results.paramsDat;   

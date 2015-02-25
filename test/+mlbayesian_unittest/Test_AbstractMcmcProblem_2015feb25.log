@@ -1,0 +1,66 @@
+>> results = run(mlbayesian_unittest.Test_AbstractMcmcProblem)
+Running mlbayesian_unittest.Test_AbstractMcmcProblem
+BEST-FIT    param k04 value   0.260570
+BEST-FIT    param k12 value   0.008939
+BEST-FIT    param k21 value   0.038088
+BEST-FIT    param k32 value   0.073444
+BEST-FIT    param k43 value   0.000425
+BEST-FIT    param t0 value   0.000000
+FINAL STATS param k04 average 0.260570 std 0.000000
+FINAL STATS param k12 average 0.008919 std 0.000031
+FINAL STATS param k21 average 0.038088 std 0.000015
+FINAL STATS param k32 average 0.073278 std 0.000305
+FINAL STATS param k43 average 0.000425 std 0.000000
+FINAL STATS param t0 average 0.000000 std 0.000000
+
+================================================================================
+Verification failed in mlbayesian_unittest.Test_AbstractMcmcProblem/test_runMcmc.
+
+    ---------------------
+    Framework Diagnostic:
+    ---------------------
+    verifyEqual failed.
+    --> The values are not equal using "isequaln".
+    --> The error was not within relative tolerance.
+    --> Failure table:
+                Index          Actual            Expected            Error             RelativeError       RelativeTolerance
+                _____    ___________________    __________    ___________________    __________________    _________________
+            
+                2        0.00893884570343454    0.00047967    0.00845917570343454      17.6354070578409    0.05             
+                3         0.0380875164601526      0.034772    0.00331551646015259    0.0953501800342975    0.05             
+                4          0.073443996705119     0.0025173      0.070926696705119      28.1757028185433    0.05             
+    
+    Actual Value:
+           0.260570000000000   0.008938845703435   0.038087516460153   0.073443996705119   0.000425280000000                   0
+    Expected Value:
+           0.260570000000000   0.000479670000000   0.034772000000000   0.002517300000000   0.000425280000000                   0
+
+    ------------------
+    Stack Information:
+    ------------------
+    In /Users/jjlee/Local/src/mlcvl/mlbayesian/test/+mlbayesian_unittest/Test_AbstractMcmcProblem.m (Test_AbstractMcmcProblem.test_runMcmc) at 29
+================================================================================
+.
+Done mlbayesian_unittest.Test_AbstractMcmcProblem
+__________
+
+Failure Summary:
+
+     Name                                                       Failed  Incomplete  Reason(s)
+    ========================================================================================================
+     mlbayesian_unittest.Test_AbstractMcmcProblem/test_runMcmc    X                 Failed by verification.
+    
+
+results = 
+
+  TestResult with properties:
+
+          Name: 'mlbayesian_unittest.Test_AbstractMcmcProblem/test_runMcmc'
+        Passed: 0
+        Failed: 1
+    Incomplete: 0
+      Duration: 840.2002
+
+Totals:
+   0 Passed, 1 Failed, 0 Incomplete.
+   840.2002 seconds testing time.
