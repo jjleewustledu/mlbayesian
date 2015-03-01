@@ -1,0 +1,29 @@
+k21	2.614	5.269	% 1/min
+k12	0.1152	1.2191
+k32	0.090	450.430
+k43	0.0122	0.231
+
+K			0.86	2.47		% mL/100 g/min
+K1			1.81	3.66		% mL/100 g/min
+k43			0.006	0.024		% 1/min
+CMR_{glc}	1.6		11.4		% mcmol/100 g/min
+CTX_{glc}	9.5		20.9		% mcmol/100 g/min
+CTX_{glc}/CMR_{glc}	1.2	2.8
+
+
+CMRGlu = Ca * VB * k21 * k32 / (k12 + k32)
+influx = Ca * VB * k21
+free glucose = CMRGlu / k32
+E_{NET} = (VB/CBF) * k21 * k32 / (k12 + k32)
+
+K_1 = VB * k21
+CTX_{glc} = K_1 * Glc_{wb}
+K = VB * k21 * k32 / (k12 + k32)
+CMR_{glc} = K * Glc_{wb}
+
+Glc_{wb} ~ Ca
+
+
+
+
+

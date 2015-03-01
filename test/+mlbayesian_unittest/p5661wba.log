@@ -8,7 +8,7 @@
  **********************************************************************
  ******************************
  
-  R.P.O. RUN ON  Tue Dec 28 09:36:33 1999
+  R.P.O. RUN ON  Tue Dec 28 10:12:54 1999
  
  
   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -24,9 +24,9 @@
  /data/wjp/data8/np15/p5661/p5661g.dta                                           
   NUMBER OF SECONDS BLOOD CURVE OBTAINED:   5761
   PARAMETER BLOCK FILE            
- /data/wjp/data8/np15/p5661/p5661wbf.pbl                                         
-    NUMBER OF PARAMETERS TO BE ESTIMATED:  4
-    PARAMETERS NUMBERS...................  5  6  7  8
+ /data/wjp/data8/np15/p5661/p5661wb.pbl                                          
+    NUMBER OF PARAMETERS TO BE ESTIMATED:  5
+    PARAMETERS NUMBERS...................  5  6  7  8  9
     NUMBER OF REGION-DEPENDENT PARAMETERS:  2
            PARAMETER NUMBER    
              1
@@ -39,39 +39,41 @@
                3.6900       BLOOD VOL        ML/100G      
                3.1300       BLD GLUCOSE(art) uMOL/ML      
                15.634       K-01 (F/V1)      PER MIN      
-               17.190       K-21             PER MIN      
-               350.31       K-12 (02)        PER MIN      
-               47.564       K-32             PER MIN      
-              0.25672E-01   K-43             PER MIN      
-               3.0000       T0               SEC          
+               2.0863       K-21             PER MIN      
+              0.28780E-01   K-12 (02)        PER MIN      
+              0.15104       K-32             PER MIN      
+              0.25517E-01   K-43             PER MIN      
+               4.3924       T0               SEC          
                    0.       T(1/2)           SECONDS      
-              0.13145       UTILIZATION FRACTION          
-               23.735       GLUCOSE MET      uMOL/MIN/100G
-               2.0551       CHI              PER MIN      
-               63.433       KD               ML/MIN/100G  
-               198.54       FORWARD FLUX     uMOL/MIN/100G
-              0.49902E-02   BRAIN FREE GLUC  uMOL/G       
+              0.11209       UTILIZATION FRACTION          
+               20.239       GLUCOSE MET      uMOL/MIN/100G
+               1.7524       CHI              PER MIN      
+               7.6984       KD               ML/MIN/100G  
+               24.096       FORWARD FLUX     uMOL/MIN/100G
+               1.3400       BRAIN FREE GLUC  uMOL/G       
 
 
            PARAMETER              SD         F D(%)
-        0.171904E+02        0.681286E+01    39.632
-        0.350306E+03        0.765852E+02    21.862
-        0.475642E+02        0.113219E+02    23.803
-        0.256723E-01        0.159628E-03     0.622
+        0.208629E+01        0.372178E-01     1.784
+        0.287795E-01        0.901933E-02    31.339
+        0.151035E+00        0.396440E+00   262.482
+        0.255168E-01        0.365132E-03     1.431
+        0.439241E+01        0.303954E+00     6.920
 
 
                    CORRELATION MATRIX
 
- COLUMN      1     2     3     4
+ COLUMN      1     2     3     4     5
  
- ROW  1    1.00  1.00 -1.00 -0.32
- ROW  2    1.00  1.00 -1.00 -0.33
- ROW  3   -1.00 -1.00  1.00  0.33
- ROW  4   -0.32 -0.33  0.33  1.00
+ ROW  1    1.00  0.93  0.81  0.42 -0.23
+ ROW  2    0.93  1.00  0.96  0.61 -0.19
+ ROW  3    0.81  0.96  1.00  0.78 -0.15
+ ROW  4    0.42  0.61  0.78  1.00 -0.07
+ ROW  5   -0.23 -0.19 -0.15 -0.07  1.00
 
- WEIGHTED SUM-OF-SQUARES & RMSE                2.331               0.216
+ WEIGHTED SUM-OF-SQUARES & RMSE                2.004               0.202
 
 
- UNWEIGHTED SUM-OF-SQUARES & RMSE          3581021184.               8463.
+ UNWEIGHTED SUM-OF-SQUARES & RMSE          3593926656.               8564.
  
  ************* END OF JOB *******************

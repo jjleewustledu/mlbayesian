@@ -1,3 +1,23 @@
+
+%% ESTIMATEPARAMETERS
+%  expected_parameters = [0.2606 4.7967e-04 0.0348 0.0025 4.2528e-04 0]; % k04 k12 k21 k32 k43 t0
+
+import mlbayesian.*;
+map = containers.Map;
+map('k04') = struct('fixed', 1, 'min', 1e-3, 'mean', this.K04,   'max', 10); 
+map('k12') = struct('fixed', 0, 'min', 1e-4, 'mean', 0.00047967, 'max', 0.01);
+map('k21') = struct('fixed', 0, 'min', 1e-2, 'mean', 0.034772,     'max', 0.1);
+map('k32') = struct('fixed', 0, 'min', 1e-4, 'mean', 0.0025173,     'max', 10);
+map('k43') = struct('fixed', 0, 'min', 1e-4, 'mean', 0.00042528, 'max', 0.001);  
+map('t0' ) = struct('fixed', 1, 'min',    0, 'mean', 0,          'max', 10);  
+
+
+
+
+
+
+
+
 >> results = run(mlbayesian_unittest.Test_AbstractMcmcProblem)
 Running mlbayesian_unittest.Test_AbstractMcmcProblem
 BEST-FIT    param k04 value   0.260570
@@ -64,3 +84,103 @@ results =
 Totals:
    0 Passed, 1 Failed, 0 Incomplete.
    840.2002 seconds testing time.
+
+
+
+
+
+
+
+
+
+>> results = run(mlbayesian_unittest.Test_AbstractMcmcProblem)
+Running mlbayesian_unittest.Test_AbstractMcmcProblem
+BEST-FIT    param k04 value   0.260570
+BEST-FIT    param k12 value   0.008896
+BEST-FIT    param k21 value   0.037602
+BEST-FIT    param k32 value   0.086550
+BEST-FIT    param k43 value   0.000428
+BEST-FIT    param t0 value   0.000000
+FINAL STATS param k04 average 0.260570 std 0.000000
+FINAL STATS param k12 average 0.008883 std 0.000024
+FINAL STATS param k21 average 0.037583 std 0.000011
+FINAL STATS param k32 average 0.086912 std 0.000322
+FINAL STATS param k43 average 0.000428 std 0.000000
+FINAL STATS param t0 average 0.000000 std 0.000000
+
+================================================================================
+Verification failed in mlbayesian_unittest.Test_AbstractMcmcProblem/test_runMcmc.
+
+    ---------------------
+    Framework Diagnostic:
+    ---------------------
+    verifyEqual failed.
+    --> The values are not equal using "isequaln".
+    --> The error was not within relative tolerance.
+    --> Failure table:
+                Index          Actual            Expected            Error             RelativeError       RelativeTolerance
+                _____    ___________________    __________    ___________________    __________________    _________________
+            
+                2        0.00889585212274329    0.00047967    0.00841618212274329      17.5457754763552    0.05             
+                3         0.0376015826963066      0.034772    0.00282958269630656    0.0813753219920211    0.05             
+                4         0.0865503049319565     0.0025173     0.0840330049319565      33.3821971683774    0.05             
+    
+    Actual Value:
+           0.260570000000000   0.008895852122743   0.037601582696307   0.086550304931956   0.000427531296689                   0
+    Expected Value:
+           0.260570000000000   0.000479670000000   0.034772000000000   0.002517300000000   0.000425280000000                   0
+
+    ------------------
+    Stack Information:
+    ------------------
+    In /Users/jjlee/Local/src/mlcvl/mlbayesian/test/+mlbayesian_unittest/Test_AbstractMcmcProblem.m (Test_AbstractMcmcProblem.test_runMcmc) at 29
+================================================================================
+.
+Done mlbayesian_unittest.Test_AbstractMcmcProblem
+__________
+
+Failure Summary:
+
+     Name                                                       Failed  Incomplete  Reason(s)
+    ========================================================================================================
+     mlbayesian_unittest.Test_AbstractMcmcProblem/test_runMcmc    X                 Failed by verification.
+    
+
+results = 
+
+  TestResult with properties:
+
+          Name: 'mlbayesian_unittest.Test_AbstractMcmcProblem/test_runMcmc'
+        Passed: 0
+        Failed: 1
+    Incomplete: 0
+      Duration: 1.1765e+03
+
+Totals:
+   0 Passed, 1 Failed, 0 Incomplete.
+   1176.5274 seconds testing time.
+
+
+
+
+
+
+
+
+%% ESTIMATEPARAMETERS
+%  expected_parameters = [0.2606 4.7967e-04 0.0348 0.0025 4.2528e-04 0]; % k04 k12 k21 k32 k43 t0
+
+import mlbayesian.*;
+map = containers.Map;
+map('k04') = struct('fixed', 1, 'min', 1e-3, 'mean', this.K04,   'max', 10); 
+map('k12') = struct('fixed', 0, 'min', 1e-3, 'mean', 0.00047967, 'max', 0.05);
+map('k21') = struct('fixed', 0, 'min', 1e-2, 'mean', 0.034772,   'max', 0.1);
+map('k32') = struct('fixed', 0, 'min', 1e-3, 'mean', 0.0025173,  'max', 10);
+map('k43') = struct('fixed', 0, 'min', 1e-4, 'mean', 0.00042528, 'max', 0.005);  
+map('t0' ) = struct('fixed', 1, 'min',    0, 'mean', 0,          'max', 10);  
+
+
+
+
+
+
