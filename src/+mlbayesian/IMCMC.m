@@ -10,15 +10,12 @@ classdef IMCMC
  	%  $Id$ 
     
 	properties (Abstract)
-        NPROPOSALS % number of loops in parameter prob phase
-        NPOP       % number of population
-        NPOPREP    % number of population to replace
-        NBETA      % number of temperature steps
-        NANNEAL    % number of loops per annealing temp
-        NMOD       % number of models (unused)
-    end
-       
-    properties (Abstract)
+        nProposals % number of loops in parameter prob phase
+        nPop       % number of population
+        nPopRep    % number of population to replace
+        nBeta      % number of temperature steps
+        nAnneal    % number of loops per annealing temp
+
         dependentData
         paramsData
         paramsBetas
@@ -31,6 +28,7 @@ classdef IMCMC
         
         lpBetas
         lpPopulations
+        lpFinal
         
         paramsHist   
         logProbQC   
@@ -39,11 +37,19 @@ classdef IMCMC
         nParams
         nSamples
         nProposalsQC
+        showPlots
     end
 
 	methods (Abstract)
         runMcmc(this)
         logProbability(this, paramsVec, beta, logProbabilityFlag)
+        
+        printBestFit(this)
+        printFinalStats(this)
+        histParametersDistributions(this)
+        histStdOfError(this)
+        plotAnnealing(this)
+        plotLogProbabilityQC(this)
  	end 
 
 	%  Created with Newcl by John J. Lee after newfcn by Frank Gonzalez-Morphy 

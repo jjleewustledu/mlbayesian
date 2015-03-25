@@ -1,4 +1,4 @@
-classdef AbstractMcmcProblem < mlbayesian.AbstractBayesianProblem 
+classdef AbstractMcmcProblem < mlbayesian.AbstractBayesianProblem & mlbayesian.IMcmcProblem
 	%% ABSTRACTMCMCPROBLEM   
     %  Yet abstract:
     %      properties baseTitle, xLabel, yLabel, showPlots
@@ -12,16 +12,20 @@ classdef AbstractMcmcProblem < mlbayesian.AbstractBayesianProblem
  	%  developed on Matlab 8.4.0.150421 (R2014b) 
  	%  $Id$ 
  	 
-
-    properties (Abstract)
-        baseTitle
-        xLabel
-        yLabel
-    end
-    
     properties (Dependent)
         length % of dependent_data = f(time_interpolants), which must have the same array sizes
         timeInterpolants
+        timeFinal
+        
+        NPROPOSALS % number of loops in parameter prob phase
+        NPOP       % number of population
+        NPOPREP    % number of population to replace
+        NBETA      % number of temperature steps
+        NANNEAL    % number of loops per annealing temp        
+        
+        annealingAvpar
+        annealingSdpar
+        annealingInitz
     end
     
     methods %% GET
@@ -30,6 +34,33 @@ classdef AbstractMcmcProblem < mlbayesian.AbstractBayesianProblem
         end
         function ti = get.timeInterpolants(this)
             ti = this.independentData;
+        end
+        function tf = get.timeFinal(this)
+            tf = this.independentData(end);
+        end
+        function n  = get.NPROPOSALS(this)
+            n = this.mcmc.NPROPOSALS;
+        end
+        function n  = get.NPOP(this)
+            n = this.mcmc.NPOP;
+        end
+        function n  = get.NPOPREP(this)
+            n = this.mcmc.NPOPREP;
+        end
+        function n  = get.NBETA(this)
+            n = this.mcmc.NBETA;
+        end
+        function n  = get.NANNEAL(this)
+            n = this.mcmc.NANNEAL;
+        end
+        function a  = get.annealingAvpar(this)
+            a = this.mcmc.annealingAvpar;
+        end
+        function a  = get.annealingSdpar(this)
+            a = this.mcmc.annealingSdpar;
+        end
+        function a  = get.annealingInitz(this)
+            a = this.mcmc.annealingInitz;
         end
     end
 
@@ -56,17 +87,38 @@ classdef AbstractMcmcProblem < mlbayesian.AbstractBayesianProblem
                 this.plotEstimate;
             end
         end   
+        function lp   = logProbability(this, paramsVec, beta, logProbabilityFlag)
+            lp = this.mcmc.logProbability(paramsVec, beta, logProbabilityFlag);
+        end
+        function        printBestFit(this)
+            this.mcmc.printBestFit;
+        end
+        function        printFinalStats(this)
+            this.mcmc.printFinalStats;
+        end
+        function        histParametersDistributions(this) 
+            this.mcmc.histParametersDistributions;
+        end
+        function        histStdOfError(this) 
+            this.mcmc.histStdOfError;
+        end
+        function        plotAnnealing(this) 
+            this.mcmc.plotAnnealing;
+        end
+        function        plotLogProbabilityQC(this) 
+            this.mcmc.plotLogProbabilityQC;
+        end    
         function        plotOri(this)
             figure
-            plot(this.timeInterpolants, this.dependentData, 'k', 'LineWidth', 2)
+            plot(this.timeInterpolants, this.dependentData, 'o')
             title(this.baseTitle)
             xlabel(this.xLabel)
             ylabel(this.yLabel)
         end
         function        plotEstimate(this)
             figure
-            plot(this.timeInterpolants, this.dependentData, 'k', ...
-                 this.timeInterpolants, this.estimateData,  'k:', 'LineWidth', 2);
+            plot(this.timeInterpolants, this.dependentData, 'o', ...
+                 this.timeInterpolants, this.estimateData,  '-');
             title(sprintf('%s and Bayesian estimate', this.baseTitle));
             xlabel(this.xLabel)
             ylabel(this.yLabel)

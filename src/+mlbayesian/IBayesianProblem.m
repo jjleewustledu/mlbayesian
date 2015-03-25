@@ -16,14 +16,15 @@ classdef IBayesianProblem
         paramsManager   % mlbayesian.IBayesianParameters
         mcmc            % mlbayesian.IMCMC
         bestFitParams   % numeric 
-        showPlots       % boolean
  	end 
 
 	methods (Abstract)
         estimateParameters(this)
-  		sumSquaredErrors(this) % merit function
         estimateData(this)     % objective interface for human readability
         estimateDataFast(this) % speed-optimal interface
+  		sumSquaredErrors(this) % merit function
+        Q(this)
+        normalizedQ(this)
         finalParams(this)
  	end 
 

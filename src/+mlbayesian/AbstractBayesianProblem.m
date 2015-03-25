@@ -1,7 +1,6 @@
 classdef AbstractBayesianProblem < mlbayesian.IBayesianProblem 
 	%% ABSTRACTBAYESIANPROBLEM  
     %  Yet abstract:   
-    %      properties showPlots
     %      methods estimateParameters, estimateData, estimateDataFast
 
 	%  $Revision$ 
@@ -39,17 +38,38 @@ classdef AbstractBayesianProblem < mlbayesian.IBayesianProblem
             addOptional(p,   'depData', [], @isnumeric);
             parse(p, varargin{:});            
  			
-            this.independentData = p.Results.indepData;
+            this.independentData = this.offsetZeros(p.Results.indepData);
             this.dependentData   = p.Results.depData;
             assert(all(size(this.independentData) == size(this.dependentData)));
         end 
         function sse  = sumSquaredErrors(this, p)
             p   = num2cell(p);
-            sse = norm(this.dependentData - this.estimateDataFast(p{:}));
+            sse = sum(abs(this.dependentData - this.estimateDataFast(p{:})).^2);
+        end
+        function q    = Q(this)
+            q = this.sumSquaredErrors(this.bestFitParams);
+        end
+        function nq   = normalizedQ(this)
+            nq = this.Q/sum(abs(this.dependentData).^2);
         end
         function x    = finalParams(this, key)
             x = this.bestFitParams(this.paramsManager.paramsIndices(key));
         end 
+    end
+    
+    %% PRIVATE
+    
+    methods (Access = 'private')
+        function x = ditherZeros(~, x)
+            if (any(0 == x))
+                x = x + (rand(1) + 1) * eps;
+            end
+        end
+        function x = offsetZeros(~, x)            
+            if (any(0 == x))
+                x = x + eps;
+            end
+        end
     end
     
 	%  Created with Newcl by John J. Lee after newfcn by Frank Gonzalez-Morphy 

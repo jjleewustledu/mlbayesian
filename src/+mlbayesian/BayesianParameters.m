@@ -10,11 +10,11 @@ classdef BayesianParameters < mlbayesian.IBayesianParameters
  	%  $Id$  	 
     
     properties        
-        NPROPOSALS = 100   % number of loops in parameter prob phase
-        NPOP       =  50   % number of population
-        NPOPREP    =   5   % number of population to replace
-        NBETA      =  50   % number of temperature steps
-        NANNEAL    =  20   % number of loops per annealing temp
+        nProposals = 100   % number of loops in parameter prob phase
+        nPop       =  50   % number of population
+        nPopRep    =   5   % number of population to replace
+        nBeta      =  50   % number of temperature steps
+        nAnneal    =  20   % number of loops per annealing temp
         
         paramsMap     % parameter name to struct('fixed', 0, 'min', eps, 'mean', 1, 'max',  10
         paramsIndices % parameter name to unique integer index
@@ -62,10 +62,11 @@ classdef BayesianParameters < mlbayesian.IBayesianParameters
             %          this = BayesianParameters(pmap)
             
             assert(isa(pmap, 'containers.Map') && ~isempty(pmap));
-            this.paramsMap = pmap;   
+            this.paramsMap = pmap; 
             
             this = this.buildParamsIndices;
             this = this.buildProtectedProperties;
+            this.checkParams;
         end
     end
     
@@ -110,6 +111,28 @@ classdef BayesianParameters < mlbayesian.IBayesianParameters
         end
         function v    = paramsFixedValue(this, key)
             v = this.paramsMap(key).mean;
+        end
+        function        checkParams(this)
+            if (any(this.max_ == this.min_))
+
+                fprintf('\n');
+                fprintf('ERROR:  Parameters will create fault attempting to access mlbayesian.MCMC.lpPopulations(0); \n');
+                fprintf('index must be a positive integer or logical.\n');
+                fprintf('Fault in mlbayesian.MCMC.replacePoorMembers (line 473).\n');
+                fprintf('Try setting prior min != max.\n');
+                this.printParams;
+                error('mlbayesian:parameterOutOfRange', 'BayesianParameters.checkParams');
+            end
+        end
+        function        printParams(this)            
+            keys = this.paramsMap.keys;  
+            fprintf('\n');
+            fprintf('Param. Key \t\tMin \tMean \tMax\n');
+            for p = 1:length(keys)
+                aMap = this.paramsMap(keys{p});
+                fprintf('%s \t\t%g\t%g\t%g\n', keys{p}, aMap.min, aMap.mean, aMap.max);
+            end
+            fprintf('\n');
         end
     end
     

@@ -1,5 +1,6 @@
 classdef MCMC < mlbayesian.IMCMC 
-	%% MCMC has the machinery to do a simple Bayesian estimation 
+	%% MCMC has the machinery to do a simple Bayesian estimation;
+    %  it becomes more verbose for getenv('VERBOSITY') > 0 or for getenv('VERBOSE') == 1.
 
 	%  $Revision$ 
  	%  was created $Date$ 
@@ -9,17 +10,19 @@ classdef MCMC < mlbayesian.IMCMC
  	%  developed on Matlab 8.3.0.532 (R2014a) 
  	%  $Id$ 
 
+    properties (Constant)
+        NBINS    = 50   % nbins for hist
+        FRACPEEK =  0.2
+        PARPEN   =  0.0 % -1.0 % minimal penalty for each param (unused)
+        LRG      =  1.0e20
+    end
+    
     properties
-        NPROPOSALS = 100   % number of loops in parameter prob phase
-        NPOP       =  50   % number of population
-        NPOPREP    =   5   % number of population to replace
-        NBETA      =  50   % number of temperature steps
-        NANNEAL    =  20   % number of loops per annealing temp
-        NMOD       =   1   % number of models (unused)
-        NBINS      =  50   % nbins for hist
-        FRACPEEK   =   0.2
-        PARPEN     =   0.0 % -1.0 % minimal penalty for each param (unused)
-        LRG        =   1.0e20
+        nProposals = 100 % number of loops in parameter prob phase
+        nPop       =  50 % number of population
+        nPopRep    =   5 % number of population to replace
+        nBeta      =  50 % number of temperature steps
+        nAnneal    =  20 % number of loops per annealing temp
 
         dependentData        
         paramsData   
@@ -40,8 +43,7 @@ classdef MCMC < mlbayesian.IMCMC
         stdOfError 
         
         showBestFit    = true
-        showFinalStats = true      
-        verbosity      = 0
+        showFinalStats = true
     end
     
     properties (Dependent)
@@ -49,6 +51,7 @@ classdef MCMC < mlbayesian.IMCMC
         nSamples
         nProposalsQC
         showPlots
+        verbosity
     end
     
     methods %% GET/SET
@@ -59,10 +62,13 @@ classdef MCMC < mlbayesian.IMCMC
             n = length(this.dependentData);
         end
         function n = get.nProposalsQC(this)
-            n = this.FRACPEEK * this.NPROPOSALS;
+            n = this.FRACPEEK * this.nProposals;
         end
         function tf = get.showPlots(this)
             tf = this.bayesianProblem_.showPlots;
+        end
+        function v  = get.verbosity(this)
+            v = this.verbosity_;
         end
     end
     
@@ -74,37 +80,37 @@ classdef MCMC < mlbayesian.IMCMC
             addRequired(p, 'depDat',    @isnumeric);
             addRequired(p, 'paramsDat', @(x) isa(x, 'mlbayesian.IBayesianParameters'));
             parse(p, bayesProb, depDat, paramsDat);            
+            this = this.setVerbosity;
             
-            this.NPROPOSALS        = p.Results.paramsDat.NPROPOSALS;
-            this.NPOP              = p.Results.paramsDat.NPOP;
-            this.NPOPREP           = p.Results.paramsDat.NPOPREP;
-            this.NBETA             = p.Results.paramsDat.NBETA;
-            this.NANNEAL           = p.Results.paramsDat.NANNEAL;
-        
+            this.nProposals        = p.Results.paramsDat.nProposals;
+            this.nPop              = p.Results.paramsDat.nPop;
+            this.nPopRep           = p.Results.paramsDat.nPopRep;
+            this.nBeta             = p.Results.paramsDat.nBeta;
+            this.nAnneal           = p.Results.paramsDat.nAnneal;        
             this.bayesianProblem_  = p.Results.bayesProb;
             this.dependentData     = p.Results.depDat;
             this.paramsData        = p.Results.paramsDat;   
-            this.paramsBetas       = zeros(this.nParams, this.NBETA);  
-            this.paramsPopulations = zeros(this.nParams, this.NPOP);   
+            this.paramsBetas       = zeros(this.nParams, this.nBeta);  
+            this.paramsPopulations = zeros(this.nParams, this.nPop);   
             this.paramsSigmas      = zeros(this.nParams, 1);       
             this.annealingAvpar    = zeros(this.nParams, 1);
             this.annealingSdpar    = zeros(this.nParams, 1);
             this.annealingInitz    = zeros(this.nParams, 1);
             this.bestFitParams     = zeros(this.nParams, 1);
             
-            this.lpBetas       = zeros(this.NBETA, 1);
-            this.lpPopulations = zeros(this.NPOP, 1);            
+            this.lpBetas       = zeros(this.nBeta, 1);
+            this.lpPopulations = zeros(this.nPop, 1);            
             
             
-            this.paramsHist = zeros(this.nParams, this.NPOP*this.nProposalsQC); % for histogram of parameters
-            this.logProbQC  = zeros(this.NPOP, this.nProposalsQC);              % qc on the lprob
-            this.stdOfError = zeros(this.NPOP*this.nProposalsQC, 1);            % follow the standard dev of error            
+            this.paramsHist = zeros(this.nParams, this.nPop*this.nProposalsQC); % for histogram of parameters
+            this.logProbQC  = zeros(this.nPop, this.nProposalsQC);              % qc on the lprob
+            this.stdOfError = zeros(this.nPop*this.nProposalsQC, 1);            % follow the standard dev of error            
             
             %% %%%%%%%%%%%%%%%%%%%
             %% initialize the MCMC
             %% %%%%%%%%%%%%%%%%%%%
             
-            for m = 1:this.NPOP
+            for m = 1:this.nPop
                 this.paramsSigmas = (this.paramsData.max - this.paramsData.min)/10.0;
                 for k = 1:this.nParams
                     if (this.paramsData.fixed(k))
@@ -128,21 +134,21 @@ classdef MCMC < mlbayesian.IMCMC
             %% %%%%%%%%%%%%%%%%%%%%%%%%
 
             lp0 = nan;
-            for b = 1:this.NBETA  
+            for b = 1:this.nBeta  
                 
-                beta_ = (1.0/(this.NBETA-1.0))*b; 
+                beta_ = (1.0/(this.nBeta-1.0))*b; 
                 this.printBeta(b, beta_, lp0);
                 parn = this.annealingInitz;
                 this.lpBetas(b) = 0.0;
 
                 %% population loop
-                for m = 1:this.NPOP
+                for m = 1:this.nPop
                     
                     ptmp = this.paramsPopulations(:,m);
                     lp0 = this.logProbability(ptmp, beta_, 1);
                     this.lpPopulations(m) = lp0;
 
-                    for j = 1:this.NANNEAL
+                    for j = 1:this.nAnneal
                         for k = 1:this.nParams
                             
                             if (this.paramsData.fixed(k)) 
@@ -175,15 +181,15 @@ classdef MCMC < mlbayesian.IMCMC
                                 end
                             end % end if (this.paramsData.fixed(k))
                         end % end for k = 1:this.nParams
-                    end % end for j = 1:this.NANNEAL
-                end % end for m = 1:this.NPOP
+                    end % end for j = 1:this.nAnneal
+                end % end for m = 1:this.nPop
 
                 this = this.gatherAnnealingStats(b);
                 this = this.BretthorstAdjustments(parn);    
                 this.printAnnealing(b, parn);
                 this = this.replacePoorMembers;
 
-            end % end for b = 1:this.NBETA 
+            end % end for b = 1:this.nBeta 
 
             if (this.showPlots); this.plotAnnealing; end
             
@@ -191,7 +197,7 @@ classdef MCMC < mlbayesian.IMCMC
             %% proposal/sampling phase
             %% %%%%%%%%%%%%%%%%%%%%%%%
 
-            for m = 1:this.NPOP
+            for m = 1:this.nPop
                 
                 ptmp = this.paramsPopulations(:,m);
                 this.bestFitParams = this.paramsPopulations(:,m);
@@ -200,7 +206,7 @@ classdef MCMC < mlbayesian.IMCMC
                 lpmax = lp0;
                 parn = this.annealingInitz; 
                 
-                for j = 1:this.NPROPOSALS
+                for j = 1:this.nProposals
                     for k = 1:this.nParams
                         
                         if (this.paramsData.fixed(k)) 
@@ -243,8 +249,8 @@ classdef MCMC < mlbayesian.IMCMC
                     
                     [lp1, this] = this.updateHistograms(j, m, lp0, lp1, ptmp);
                     
-                end % end for j = 1:this.NPROPOSALS
-            end % end for m = 1:this.NPOP
+                end % end for j = 1:this.nProposals
+            end % end for m = 1:this.nPop
             
             %% %%%%%%%%%
             %% reporting
@@ -276,14 +282,15 @@ classdef MCMC < mlbayesian.IMCMC
             end
 
             % use for sigma fit
-            if (paramsVec(1) < 0.0)
+            if (paramsVec(1) < 0.0) % DISPUTE:  why test only paramsVec(1)?
+                warning('mlbayesian:disputedCode', 'covering MCMC.logProbability (line 281); paramsVec(1) -> %g', paramsVec(1));
                 lprob = lprob / (-2.0*paramsVec(1)^2);
                 lprob = lprob + (-0.5*this.nSamples)*log(2.0*pi*paramsVec(1)^2);
             else  % no sigma, use t distribution Jeffrey Prior
                 lprob = -0.5*this.nSamples*log(0.5*lprob);
             end
 
-            % add in beta and pretest probabilities 
+            % add in beta and pretest probabilities
             if (lpFlag == 1)
                 % beta only operates on likelihoods
                 args  = this.PARPEN - (paramsVec - this.paramsData.mean).^2 ./ (2 * this.paramsData.std.^2);
@@ -296,14 +303,14 @@ classdef MCMC < mlbayesian.IMCMC
             
             % print best fit member of population
             for k = 1:this.nParams
-                fprintf('BEST-FIT    param %s value   %f\n', this.paramIndexToLabel(k), this.bestFitParams(k));
+                fprintf('BEST-FIT    param %3s value %f\n', this.paramIndexToLabel(k), this.bestFitParams(k));
             end
         end
         function printFinalStats(this)
             
             avpar = this.annealingInitz;
             sdpar = this.annealingInitz;
-            for m = 1:this.NPOP
+            for m = 1:this.nPop
                 ptmp = this.paramsPopulations(:,m);
                 for k = 1:this.nParams
                     avpar(k) = avpar(k) + ptmp(k);
@@ -311,8 +318,8 @@ classdef MCMC < mlbayesian.IMCMC
                 end
             end
             for k = 1:this.nParams
-                avpar(k) = avpar(k)/this.NPOP;
-                sdpar(k) = (sdpar(k) - this.NPOP*avpar(k)^2)/(this.NPOP - 1);
+                avpar(k) = avpar(k)/this.nPop;
+                sdpar(k) = (sdpar(k) - this.nPop*avpar(k)^2)/(this.nPop - 1);
                 if (sdpar(k) > 0.0)
                     sdpar(k) = sqrt(sdpar(k));
                 else
@@ -322,9 +329,14 @@ classdef MCMC < mlbayesian.IMCMC
             
             avpar = mean(this.paramsPopulations'); %#ok<UDIM>
             sdpar = std(this.paramsPopulations'); %#ok<UDIM>
+            fprintf('\n');
             for k = 1:this.nParams
-                fprintf('FINAL STATS param %s average %f std %f\n', this.paramIndexToLabel(k), avpar(k), sdpar(k));
-            end
+                fprintf('FINAL STATS param %3s mean  %f\t std %f\n', this.paramIndexToLabel(k), avpar(k), sdpar(k));
+            end       
+            q = this.bayesianProblem_.sumSquaredErrors(this.bestFitParams);
+            fprintf('FINAL STATS Q            %g\n', q);
+            nq = q/norm(this.dependentData, 1)^2;
+            fprintf('FINAL STATS Q normalized %g\n', nq);
         end        
         
         function histParametersDistributions(this)
@@ -342,6 +354,7 @@ classdef MCMC < mlbayesian.IMCMC
         function histStdOfError(this)
             figure;
             hist(this.stdOfError, this.NBINS);
+            title('histStdOfError');
             xlabel('std. dev. of error');
         end
         function plotAnnealing(this)
@@ -349,25 +362,26 @@ classdef MCMC < mlbayesian.IMCMC
             % plotting on annealing phase
             % for k = 1:NPAR
             %     figure;
-            %     plot(1:NBETA, this.paramsBetas(k,:));
+            %     plot(1:nBeta, this.paramsBetas(k,:));
             %     title(['Parameter ',num2str(k),' vs temperature']);
             % end
             
             figure;
-            plot(1:this.NBETA, this.lpBetas);
+            plot(1:this.nBeta, this.lpBetas);
+            title('plotAnnealing');
             xlabel('beta (1/temp)');
             ylabel('log(prob)');
         end
         function plotLogProbabilityQC(this)
             figure;
             hold on;
-            for k = 1:this.NPOP
-                plot(1:this.nProposalsQC, this.logProbQC(k,:), 'Color', this.colorVariation(k, this.NPOP));
+            for k = 1:this.nPop
+                plot(1:this.nProposalsQC, this.logProbQC(k,:), 'Color', this.colorVariation(k, this.nPop));
             end
             hold off;
-            title('population index:  red->blue');
+            title('plotLogProbabilityQC');
             xlabel('proposal#');
-            ylabel('log(prob)')
+            ylabel('log(prob)');
         end
     end
     
@@ -375,9 +389,15 @@ classdef MCMC < mlbayesian.IMCMC
     
     properties (Access = 'private')
         bayesianProblem_
+        verbosity_
     end
     
     methods (Access = 'private')
+        function this =       setVerbosity(this)
+            this.verbosity_ = str2num(getenv('VERBOSITY')); %#ok<ST2NM>
+            if (isempty(this.verbosity_))
+                this.verbosity_ = str2num(getenv('VERBOSE')); end %#ok<ST2NM>
+        end
         function              printBeta(this, b, beta, lp0)
             if (this.verbosity < eps)
                 return; end
@@ -387,31 +407,33 @@ classdef MCMC < mlbayesian.IMCMC
             if (this.verbosity < 0.2)
                 return; end
             if (1                        == b || ...
-                this.FRACPEEK*this.NBETA == b || ...
-                this.NBETA               == b)
+                this.FRACPEEK*this.nBeta == b || ...
+                this.nBeta               == b)
+                fprintf('\n');
                 for k = 1:this.nParams
-                    fprintf('annealing step %d par %s avg %f std %f sigma %f acc %f\n',...
-                        b,this.paramIndexToLabel(k),this.annealingAvpar(k),this.annealingSdpar(k),this.paramsSigmas(k),parn(k)/(this.NANNEAL*this.NPOP));
+                    fprintf('annealing step %d param %3s mean %f\t std %f\t sigma %f\t acc %f\n',...
+                        b,this.paramIndexToLabel(k),this.annealingAvpar(k),this.annealingSdpar(k),this.paramsSigmas(k),parn(k)/(this.nAnneal*this.nPop));
                 end
+                fprintf('\n');
             end
         end
         
         function [this,lp1] = gatherAnnealingStats(this, b)
             this.annealingAvpar = this.annealingInitz;
             this.annealingSdpar = this.annealingInitz;
-            for m = 1:this.NPOP
+            for m = 1:this.nPop
                 ptmp = this.paramsPopulations(:,m);
                 for k = 1:this.nParams
                     this.annealingAvpar(k) = this.annealingAvpar(k) + ptmp(k);
                     this.annealingSdpar(k) = this.annealingSdpar(k) + ptmp(k)^2;
                 end
-                beta_ = (1.0/(this.NBETA-1.0))*b; 
+                beta_ = (1.0/(this.nBeta-1.0))*b; 
                 lp1 = this.logProbability(ptmp, beta_, 0);
-                this.lpBetas(b) = this.lpBetas(b) + lp1/this.NPOP;
+                this.lpBetas(b) = this.lpBetas(b) + lp1/this.nPop;
             end
             for k = 1:this.nParams
-                this.annealingAvpar(k) = this.annealingAvpar(k)/this.NPOP;
-                this.annealingSdpar(k) = (this.annealingSdpar(k) - this.NPOP*this.annealingAvpar(k)^2)/(this.NPOP - 1);
+                this.annealingAvpar(k) = this.annealingAvpar(k)/this.nPop;
+                this.annealingSdpar(k) = (this.annealingSdpar(k) - this.nPop*this.annealingAvpar(k)^2)/(this.nPop - 1);
                 if (this.annealingSdpar(k) > 0.0)
                     this.annealingSdpar(k) = sqrt(this.annealingSdpar(k));
                 else
@@ -424,21 +446,21 @@ classdef MCMC < mlbayesian.IMCMC
             %% BRETTHORSTADJUSTMENTS adjust proposals al a Bretthorst
 
             for k = 1:this.nParams
-                if (parn(k) < 0.1*this.NANNEAL*this.NPOP)
+                if (parn(k) < 0.1*this.nAnneal*this.nPop)
                         this.paramsSigmas(k) = 0.1*this.paramsSigmas(k);
-                elseif (parn(k) < 0.2*this.NANNEAL*this.NPOP)
+                elseif (parn(k) < 0.2*this.nAnneal*this.nPop)
                     if (this.paramsSigmas(k) > 0.1*this.annealingSdpar(k))
                         this.paramsSigmas(k) = 0.8*this.paramsSigmas(k);
                     end
-                elseif (parn(k) > 0.8*this.NANNEAL*this.NPOP)
+                elseif (parn(k) > 0.8*this.nAnneal*this.nPop)
                     if (this.paramsSigmas(k) < 5.0*this.annealingSdpar(k))
                         this.paramsSigmas(k) = 10.0*this.paramsSigmas(k);
                     end
-                elseif (parn(k) > 0.55*this.NANNEAL*this.NPOP)
+                elseif (parn(k) > 0.55*this.nAnneal*this.nPop)
                     if (this.paramsSigmas(k) < 5.0*this.annealingSdpar(k))
                         this.paramsSigmas(k) = 2.0*this.paramsSigmas(k);
                     end
-                elseif (parn(k) > 0.3*this.NANNEAL*this.NPOP)
+                elseif (parn(k) > 0.3*this.nAnneal*this.nPop)
                     if (this.paramsSigmas(k) < 5.0*this.annealingSdpar(k))
                         this.paramsSigmas(k) = 1.1*this.paramsSigmas(k);
                     end
@@ -449,12 +471,12 @@ classdef MCMC < mlbayesian.IMCMC
             end  
         end
         function  this      = replacePoorMembers(this)
-            for k = 1:this.NPOPREP
+            for k = 1:this.nPopRep
                 lpmax = -this.LRG;
                 lpmin = this.LRG;
                 ilpmax = 0;
                 ilpmin = 0;
-                for m = 1:this.NPOP
+                for m = 1:this.nPop
                     if (this.lpPopulations(m) == 0.0) 
                         continue; 
                     end
