@@ -23,6 +23,7 @@ classdef IBayesianProblem
         estimateData(this)     % objective interface for human readability
         estimateDataFast(this) % speed-optimal interface
   		sumSquaredErrors(this) % merit function
+        adjustParams(this)
         Q(this)
         normalizedQ(this)
         finalParams(this)

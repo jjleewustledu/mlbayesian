@@ -46,6 +46,9 @@ classdef AbstractBayesianProblem < mlbayesian.IBayesianProblem
             p   = num2cell(p);
             sse = sum(abs(this.dependentData - this.estimateDataFast(p{:})).^2);
         end
+        function ps   = adjustParams(~, ps)
+            %% ADJUSTPARAMS:  override as needed for parameter constraints
+        end
         function q    = Q(this)
             q = this.sumSquaredErrors(this.bestFitParams);
         end

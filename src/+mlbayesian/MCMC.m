@@ -145,7 +145,7 @@ classdef MCMC < mlbayesian.IMCMC
                 for m = 1:this.nPop
                     
                     ptmp = this.paramsPopulations(:,m);
-                    lp0 = this.logProbability(ptmp, beta_, 1);
+                    [lp0,ptmp] = this.logProbability(ptmp, beta_, 1);
                     this.lpPopulations(m) = lp0;
 
                     for j = 1:this.nAnneal
@@ -169,7 +169,7 @@ classdef MCMC < mlbayesian.IMCMC
                                     fprintf('Warning: nprop too large, par %d val %f sigma %f\n',k,ptmp(k),this.paramsSigmas(k));
                                 end
                                 % new lp
-                                lp1 = this.logProbability(ptmp, beta_, 1);
+                                [lp1,ptmp] = this.logProbability(ptmp, beta_, 1);
 
                                 % metropolis acceptance
                                 dele = lp1 - lp0;
@@ -201,7 +201,7 @@ classdef MCMC < mlbayesian.IMCMC
                 
                 ptmp = this.paramsPopulations(:,m);
                 this.bestFitParams = this.paramsPopulations(:,m);
-                lp0 = this.logProbability(ptmp, 1.0, 1);
+                [lp0,ptmp] = this.logProbability(ptmp, 1.0, 1);
                 this.lpPopulations(m) = lp0;
                 lpmax = lp0;
                 parn = this.annealingInitz; 
@@ -228,7 +228,7 @@ classdef MCMC < mlbayesian.IMCMC
                             end
                             
                             % new lp
-                            lp1 = this.logProbability(ptmp, 1.0, 1);
+                            [lp1,ptmp] = this.logProbability(ptmp, 1.0, 1);
 
                             % store best for future use
                             if (lp1 > lpmax)
@@ -266,7 +266,7 @@ classdef MCMC < mlbayesian.IMCMC
             if (this.showPlots);      this.histStdOfError; end
             if (this.showPlots);      this.plotLogProbabilityQC; end
         end    
-        function lprob               = logProbability(this, paramsVec, beta_, lpFlag)
+        function [lprob,paramsVec]   = logProbability(this, paramsVec, beta_, lpFlag)
             %% LOGPROBABILITY
             %
             %  lpFlag: -1  return Q
@@ -276,19 +276,14 @@ classdef MCMC < mlbayesian.IMCMC
             %  from J. S. Shimony, Mar, 2014
             
             lprob = this.bayesianProblem_.sumSquaredErrors(paramsVec);
-
+            paramsVec = this.bayesianProblem_.adjustParams(paramsVec);
+            
             if (lpFlag == -1)
                 return
             end
 
-            % use for sigma fit
-            if (paramsVec(1) < 0.0) % DISPUTE:  why test only paramsVec(1)?
-                warning('mlbayesian:disputedCode', 'covering MCMC.logProbability (line 281); paramsVec(1) -> %g', paramsVec(1));
-                lprob = lprob / (-2.0*paramsVec(1)^2);
-                lprob = lprob + (-0.5*this.nSamples)*log(2.0*pi*paramsVec(1)^2);
-            else  % no sigma, use t distribution Jeffrey Prior
-                lprob = -0.5*this.nSamples*log(0.5*lprob);
-            end
+            % use t distribution, Jeffreys Prior
+            lprob = -0.5*this.nSamples*log(0.5*lprob);
 
             % add in beta and pretest probabilities
             if (lpFlag == 1)
@@ -335,7 +330,7 @@ classdef MCMC < mlbayesian.IMCMC
             end       
             q = this.bayesianProblem_.sumSquaredErrors(this.bestFitParams);
             fprintf('FINAL STATS Q            %g\n', q);
-            nq = q/norm(this.dependentData, 1)^2;
+            nq = q/sum(abs(this.dependentData).^2);
             fprintf('FINAL STATS Q normalized %g\n', nq);
         end        
         
@@ -359,12 +354,14 @@ classdef MCMC < mlbayesian.IMCMC
         end
         function plotAnnealing(this)
             
-            % plotting on annealing phase
-            % for k = 1:NPAR
-            %     figure;
-            %     plot(1:nBeta, this.paramsBetas(k,:));
-            %     title(['Parameter ',num2str(k),' vs temperature']);
-            % end
+            figure;            
+            N = ceil(sqrt(double(this.nParams)));
+            for k = 1:this.nParams                
+                subplot(N, N, double(k));
+                plot(1:this.nBeta, this.paramsBetas(k,:));
+                xlabel(['plotAnnealing: ' this.paramIndexToLabel(k)]);
+                ylabel('annealing paramsBetas');
+            end
             
             figure;
             plot(1:this.nBeta, this.lpBetas);
