@@ -28,13 +28,21 @@ classdef AbstractBayesianProblem < mlbayesian.IBayesianProblem
         end
     end
     
+    methods (Static)        
+        function idx  = indexOf(t, t0)
+            metric = abs(t - t0);
+            [~,idx] = min(metric(:));
+            idx = idx + 1;
+        end
+    end
+    
 	methods 
   		function this = AbstractBayesianProblem(varargin) 
  			%% ABSTRACTBAYESIANPROBLEM 
  			%  Usage:  this = AbstractBayesianProblem([independent_data, dependent_data]) 
             
             p = inputParser;
-            addOptional(p, 'indepData', [], @isnumeric);
+            addOptional(p, 'indepData', [], @(x) isnumeric(x) && this.uniformSampling(x));
             addOptional(p,   'depData', [], @isnumeric);
             parse(p, varargin{:});            
  			
@@ -57,7 +65,15 @@ classdef AbstractBayesianProblem < mlbayesian.IBayesianProblem
         end
         function x    = finalParams(this, key)
             x = this.bestFitParams(this.paramsManager.paramsIndices(key));
-        end 
+        end      
+        function ensureKeyOrdering(this, currentKeys)
+            storedKeys = this.paramsManager.paramsMap.keys;
+            for k = 1:length(storedKeys)
+                assert(strcmp(storedKeys{k}, currentKeys{k}), ...
+                       sprintf('AbstractBayesianProblem.ensureKeyOrdering:  expected %s but received %s', ...
+                       storedKeys{k}, currentKeys{k}));
+            end
+        end
     end
     
     %% PRIVATE
@@ -71,6 +87,17 @@ classdef AbstractBayesianProblem < mlbayesian.IBayesianProblem
         function x = offsetZeros(~, x)            
             if (any(0 == x))
                 x = x + eps;
+            end
+        end
+        function tf = uniformSampling(this, t)
+            t   = this.ensureRow(t);
+            dts = t(2:end) - t(1:end-1);
+            dt1 = t(2) - t(1);
+            tf  = all(dt1*ones(1,length(dts)) == dts);
+        end
+        function t  = ensureRow(~, t)
+            if (size(t,1) > size(t,2))
+                t = t'; 
             end
         end
     end

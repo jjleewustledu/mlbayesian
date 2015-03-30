@@ -14,7 +14,7 @@ classdef MCMC < mlbayesian.IMCMC
         NBINS    = 50   % nbins for hist
         FRACPEEK =  0.2
         PARPEN   =  0.0 % -1.0 % minimal penalty for each param (unused)
-        LRG      =  1.0e20
+        MAX_PROP = 1000
     end
     
     properties
@@ -145,7 +145,7 @@ classdef MCMC < mlbayesian.IMCMC
                 for m = 1:this.nPop
                     
                     ptmp = this.paramsPopulations(:,m);
-                    [lp0,ptmp] = this.logProbability(ptmp, beta_, 1);
+                    lp0  = this.logProbability(ptmp, beta_, 1);
                     this.lpPopulations(m) = lp0;
 
                     for j = 1:this.nAnneal
@@ -156,17 +156,18 @@ classdef MCMC < mlbayesian.IMCMC
                             else
                                 ptmp = this.paramsPopulations(:,m);
                                 nprop = 0;
-                                while (nprop < 50)
+                                while (nprop < this.MAX_PROP)
                                     nprop = nprop + 1;
                                     dpar = this.paramsSigmas(k)*randn(1,1);
                                     if (ptmp(k)+dpar>=this.paramsData.min(k) && ptmp(k)+dpar<=this.paramsData.max(k)) 
                                         break; 
                                     end
                                 end
-                                if (nprop < 50)
+                                if (nprop < this.MAX_PROP)
                                     ptmp(k) = ptmp(k) + dpar;
                                 else
-                                    fprintf('Warning: nprop too large, par %d val %f sigma %f\n',k,ptmp(k),this.paramsSigmas(k));
+                                    if (1 == this.verbosity)
+                                        fprintf('Warning: nprop %i, par %d, val %f, sigma %f\n',nprop,k,ptmp(k),this.paramsSigmas(k)); end
                                 end
                                 % new lp
                                 [lp1,ptmp] = this.logProbability(ptmp, beta_, 1);
@@ -214,17 +215,18 @@ classdef MCMC < mlbayesian.IMCMC
                         else
                             ptmp = this.paramsPopulations(:,m);
                             nprop = 0;
-                            while (nprop < 50)
+                            while (nprop < this.MAX_PROP)
                                 nprop = nprop + 1;
                                 dpar = this.paramsSigmas(k)*randn(1,1);
                                 if (ptmp(k)+dpar>=this.paramsData.min(k) && ptmp(k)+dpar<=this.paramsData.max(k)) 
                                     break; 
                                 end
                             end
-                            if (nprop < 50)
+                            if (nprop < this.MAX_PROP)
                                 ptmp(k) = ptmp(k) + dpar;
                             else
-                                fprintf('Warning: nprop too large, par %d val %f sigma %f\n',k,ptmp(k),this.paramsSigmas(k));
+                                if (1 == this.verbosity)
+                                    fprintf('Warning: nprop %i, par %d, val %f, sigma %f\n',nprop,k,ptmp(k),this.paramsSigmas(k)); end
                             end
                             
                             % new lp
@@ -275,8 +277,8 @@ classdef MCMC < mlbayesian.IMCMC
             %
             %  from J. S. Shimony, Mar, 2014
             
-            lprob = this.bayesianProblem_.sumSquaredErrors(paramsVec);
             paramsVec = this.bayesianProblem_.adjustParams(paramsVec);
+            lprob = this.bayesianProblem_.sumSquaredErrors(paramsVec);
             
             if (lpFlag == -1)
                 return
@@ -469,10 +471,10 @@ classdef MCMC < mlbayesian.IMCMC
         end
         function  this      = replacePoorMembers(this)
             for k = 1:this.nPopRep
-                lpmax = -this.LRG;
-                lpmin = this.LRG;
-                ilpmax = 0;
-                ilpmin = 0;
+                lpmax = -Inf;
+                lpmin =  Inf;
+                ilpmax = NaN;
+                ilpmin = NaN;
                 for m = 1:this.nPop
                     if (this.lpPopulations(m) == 0.0) 
                         continue; 

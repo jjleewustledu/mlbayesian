@@ -15,7 +15,7 @@ classdef Test_AbstractMcmcProblem < matlab.unittest.TestCase
 
     properties 
         unittest_home = '/Users/jjlee/Local/src/mlcvl/mlbayesian/test/+mlbayesian_unittest'
-        testProblem = 'kinetics4'
+        testProblem = 'polynomial'
     end
     
 	methods (Test)

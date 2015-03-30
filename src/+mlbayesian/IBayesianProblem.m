@@ -10,7 +10,7 @@ classdef IBayesianProblem
  	%  $Id$ 
  	 
 
-	properties (Abstract)         
+	properties (Abstract) 
         independentData % numeric, e.g., times
         dependentData   % numeric, e.g., densities = f(time)
         paramsManager   % mlbayesian.IBayesianParameters
@@ -22,6 +22,7 @@ classdef IBayesianProblem
         estimateParameters(this)
         estimateData(this)     % objective interface for human readability
         estimateDataFast(this) % speed-optimal interface
+                               % variable ordering must match paramsManager.paramsMap.keys!
   		sumSquaredErrors(this) % merit function
         adjustParams(this)
         Q(this)

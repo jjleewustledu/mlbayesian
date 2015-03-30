@@ -16,6 +16,7 @@ classdef IMcmcProblem
         yLabel        
         
         length % of dependent_data = f(time_interpolants), which must have the same array sizes
+        dt
         timeInterpolants
         timeFinal
         
