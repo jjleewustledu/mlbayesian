@@ -1,4 +1,4 @@
-classdef AbstractMcmcProblem < mlbayesian.AbstractBayesianProblem & mlbayesian.IMcmcProblem
+classdef (Abstract) AbstractMcmcProblem < mlbayesian.AbstractBayesianProblem & mlbayesian.IMcmcProblem
 	%% ABSTRACTMCMCPROBLEM   
     %  Yet abstract:
     %      properties baseTitle, xLabel, yLabel, showPlots
@@ -15,6 +15,7 @@ classdef AbstractMcmcProblem < mlbayesian.AbstractBayesianProblem & mlbayesian.I
     properties (Dependent)
         length % of dependent_data = f(time_interpolants), which must have the same array sizes
         dt
+        times
         timeInterpolants
         timeFinal
         
@@ -33,14 +34,17 @@ classdef AbstractMcmcProblem < mlbayesian.AbstractBayesianProblem & mlbayesian.I
         function le = get.length(this)
             le = length(this.independentData);
         end
+        function t  = get.dt(this)
+            t = this.timeFinal/(this.length - 1);
+        end
+        function t  = get.times(this)
+            t = this.independentData;
+        end
         function ti = get.timeInterpolants(this)
             ti = this.independentData;
         end
         function tf = get.timeFinal(this)
             tf = this.independentData(end);
-        end
-        function t  = get.dt(this)
-            t = this.timeFinal/this.length;
         end
         function n  = get.NPROPOSALS(this)
             n = this.mcmc.NPROPOSALS;

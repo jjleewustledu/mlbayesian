@@ -1,4 +1,4 @@
-classdef AbstractBayesianProblem < mlbayesian.IBayesianProblem 
+classdef (Abstract) AbstractBayesianProblem < mlbayesian.IBayesianProblem 
 	%% ABSTRACTBAYESIANPROBLEM  
     %  Yet abstract:   
     %      methods estimateParameters, estimateData, estimateDataFast
@@ -20,11 +20,15 @@ classdef AbstractBayesianProblem < mlbayesian.IBayesianProblem
     
     properties (Dependent)
         bestFitParams
+        expectedBestFitParams
     end
     
     methods %% GET
         function p = get.bestFitParams(this)
             p = this.mcmc.bestFitParams;
+        end
+        function e = get.expectedBestFitParams(this)
+            e = this.expectedBestFitParams_;
         end
     end
     
@@ -53,6 +57,8 @@ classdef AbstractBayesianProblem < mlbayesian.IBayesianProblem
         function sse  = sumSquaredErrors(this, p)
             p   = num2cell(p);
             sse = sum(abs(this.dependentData - this.estimateDataFast(p{:})).^2);
+            if (sse < eps); sse = sse + (1 + rand(1))*eps; end
+            %assert(isfinite(sse) && ~isnan(sse), 'AbstractBayesianProblem.p -> %s', cell2str(p));
         end
         function ps   = adjustParams(~, ps)
             %% ADJUSTPARAMS:  override as needed for parameter constraints
@@ -76,6 +82,12 @@ classdef AbstractBayesianProblem < mlbayesian.IBayesianProblem
         end
     end
     
+    %% PROTECTED
+    
+    properties (Access = 'protected')
+        expectedBestFitParams_
+    end
+    
     %% PRIVATE
     
     methods (Access = 'private')
@@ -93,7 +105,7 @@ classdef AbstractBayesianProblem < mlbayesian.IBayesianProblem
             t   = this.ensureRow(t);
             dts = t(2:end) - t(1:end-1);
             dt1 = t(2) - t(1);
-            tf  = all(dt1*ones(1,length(dts)) == dts);
+            tf  = all(abs(dt1*ones(1,length(dts)) - dts) < 2*eps);
         end
         function t  = ensureRow(~, t)
             if (size(t,1) > size(t,2))

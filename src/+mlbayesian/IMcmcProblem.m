@@ -1,4 +1,4 @@
-classdef IMcmcProblem  
+classdef (Abstract) IMcmcProblem  
 	%% IMCMCPROBLEM   
 
 	%  $Revision$ 
@@ -10,14 +10,15 @@ classdef IMcmcProblem
  	%  $Id$ 
  	 
 
-	properties (Abstract)  
+	properties (Abstract) 
         baseTitle
         xLabel
         yLabel        
         
         length % of dependent_data = f(time_interpolants), which must have the same array sizes
         dt
-        timeInterpolants
+        times            % synonym of independentData
+        timeInterpolants % synonym of independentData
         timeFinal
         
         NPROPOSALS % number of loops in parameter prob phase
@@ -33,7 +34,7 @@ classdef IMcmcProblem
         showPlots % boolean
  	end 
 
-	methods (Abstract)
+	methods (Abstract) 
         runMcmc(this)
         logProbability(this, paramsVec, beta, logProbabilityFlag) %  lPFlag: -1  return Q
                                                                   %           0  return log of normalized Q

@@ -17,27 +17,54 @@ classdef BestGammaFluid < mlbayesian.AbstractMcmcProblem
         baseTitle = 'BestGammaFluid'
         xLabel    = 'times/s'
         yLabel    = 'wellcounts'
+        
+        a  = 8.5
+        d  = 5.4
+        e  = 0.54
+        p  = 1.1
+        q0 = 3.7e6
+        t0 = 31
     end 
     
-    methods (Static)  
-        function Q    = simulateQ(a, d, fss, p, q0, t0, times)
-            idx_t0 = floor(t0) + 1;            
+    properties (Dependent)
+        map
+    end
+    
+    methods %% GET 
+        function m = get.map(this)            
+            m = containers.Map;
+            m('a')  = struct('fixed', 0, 'min',   2,   'mean',  this.a,  'max',   16);
+            m('d')  = struct('fixed', 0, 'min',   4,   'mean',  this.d,  'max',    8);
+            m('e')  = struct('fixed', 0, 'min',   0.4, 'mean',  this.e,  'max',    0.7);
+            m('p')  = struct('fixed', 0, 'min',   0.5, 'mean',  this.p,  'max',    1.5); 
+            m('q0') = struct('fixed', 0, 'min', 1e5,   'mean',  this.q0, 'max',   50*max(this.dependentData));
+            m('t0') = struct('fixed', 0, 'min',   0,   'mean',  this.t0, 'max', this.timeFinal/2); 
+        end
+    end
+    
+    methods (Static)
+        function this = runGammaFluid(times, counts)
+            this = mlbayesian.BestGammaFluid(times, counts);
+            this = this.estimateParameters(this.map);
+        end
+        function Q    = fluidQ(a, d, e, p, q0, t0, times)
+            idx_t0 = mlbayesian.BestGammaFluid.indexOf(times, t0);
             cnorm  = q0 * ((p/a^d)/gamma(d/p));
-            exp1   = abs(exp(-(times/a).^p));
+            exp1   = exp(-(times/a).^p);
             Q0     = cnorm * times.^(d-1) .* exp1;
-            Q0     = Q0 + max(Q0) * fss * (1 - exp1); 
+            Q0     = abs(e * Q0 + (1 - e) * max(Q0) * (1 - exp1));
             
             Q             = zeros(1, length(times));
             Q(idx_t0:end) = Q0(1:end-idx_t0+1);
-            assert(all(isreal(Q)), 'BestGammaFluid.simulateQ.Q was complex');
-            assert(~any(isnan(Q)), 'BestGammaFluid.simulateQ.Q was NaN: %s', num2str(Q));
+            assert(all(isreal(Q)), 'BestGammaFluid.fluidQ.Q was complex');
+            assert(~any(isnan(Q)), 'BestGammaFluid.fluidQ.Q was NaN: %s', num2str(Q));
         end
-        function this = simulateMcmc(a, d, fss, p, q0, t0, times)
+        function this = simulateMcmc(a, d, fss, p, q0, t0, times, map)
             
             import mlbayesian.*;            
-            Q    = BestGammaFluid.simulateQ(a, d, fss, p, q0, t0, times);
+            Q    = BestGammaFluid.fluidQ(a, d, fss, p, q0, t0, times);
             this = BestGammaFluid(times, Q);
-            this = this.estimateParameters %#ok<NOPRT>
+            this = this.estimateParameters(map) %#ok<NOPRT>
             
             figure;
             plot(times, this.estimateData, times, Q, 'o');
@@ -54,48 +81,48 @@ classdef BestGammaFluid < mlbayesian.AbstractMcmcProblem
  			%% BESTGAMMAFLUID 
  			%  Usage:  this = BestGammaFluid(times, well_counts) 
 
- 			this = this@mlbayesian.AbstractMcmcProblem(varargin{:}); 
- 		end 
-        function this = estimateParameters(this)
-            %% ESTIMATEPARAMETERS a, d, fss, p, q0, t0
-            
-            import mlbayesian.*;
-            map = containers.Map;
-            map('a')   = struct('fixed', 0, 'min',   2,   'mean',  8.5,   'max',   16);
-            map('d')   = struct('fixed', 0, 'min',   4,   'mean',  5.4,   'max',    8);
-            map('fss') = struct('fixed', 0, 'min',   0.3, 'mean',  0.46,  'max',    0.6);
-            map('p')   = struct('fixed', 0, 'min',   0.5, 'mean',  1.1,   'max',    1.5); 
-            map('q0')  = struct('fixed', 0, 'min', 1e5,   'mean',  3.7e6, 'max',   50*max(this.dependentData));
-            map('t0')  = struct('fixed', 0, 'min',   0,   'mean', 31,     'max', this.timeFinal/2); 
-
-            this.paramsManager = BayesianParameters(map);
-            this.mcmc          = MCMC(this, this.dependentData, this.paramsManager);
-            [~,~,this.mcmc]    = this.mcmc.runMcmc;
+ 			this = this@mlbayesian.AbstractMcmcProblem(varargin{:});             
+            this.expectedBestFitParams_ = [this.a this.d this.e this.p this.q0 this.t0]';
+        end 
+        function fq   = itsFluidQ(this)
+            fq = mlbayesian.BestGammaFluid.fluidQ(this.a, this.d, this.e, this.p, this.q0, this.t0, this.times);
         end
-        function this = estimateDcvParameters(this)
-            %% ESTIMATEDCVPARAMETERS a, d, fss, p, q0, t0
+        function this = estimateParameters(this, varargin)
+            ip = inputParser;
+            addOptional(ip, 'map', this.map, @(x) isa(x, 'containers.Map'));
+            parse(ip, varargin{:});
             
             import mlbayesian.*;
-            map = containers.Map;
-            map('a')   = struct('fixed', 0, 'min',   2,   'mean',  8.5,   'max',   16);
-            map('d')   = struct('fixed', 0, 'min',   4,   'mean',  5.4,   'max',    8);
-            map('fss') = struct('fixed', 0, 'min',   0.3, 'mean',  0.46,  'max',    0.6);
-            map('p')   = struct('fixed', 0, 'min',   0.5, 'mean',  1.1,   'max',    1.5); 
-            map('q0')  = struct('fixed', 0, 'min', 1e5,   'mean',  3.7e6, 'max',   50*max(this.dependentData));
-            map('t0')  = struct('fixed', 0, 'min',   0,   'mean', 31,     'max', this.timeFinal/2); 
-
-            this.paramsManager = BayesianParameters(map);
+            this.paramsManager = BayesianParameters(ip.Results.map);
+            this.ensureKeyOrdering({'a' 'd' 'e' 'p' 'q0' 't0'});
             this.mcmc          = MCMC(this, this.dependentData, this.paramsManager);
             [~,~,this.mcmc]    = this.mcmc.runMcmc;
+            this.a  = this.finalParams('a');
+            this.d  = this.finalParams('d');
+            this.e  = this.finalParams('e');
+            this.p  = this.finalParams('p');
+            this.q0 = this.finalParams('q0');
+            this.t0 = this.finalParams('t0');
         end
         function ed   = estimateData(this)
+            keys = this.paramsManager.paramsMap.keys;
             ed = this.estimateDataFast( ...
-                this.finalParams('a'),  this.finalParams('d'), this.finalParams('fss'),this.finalParams('p'), ...
-                this.finalParams('q0'), this.finalParams('t0'));
+                this.finalParams(keys{1}), ...
+                this.finalParams(keys{2}), ...
+                this.finalParams(keys{3}), ...
+                this.finalParams(keys{4}), ...
+                this.finalParams(keys{5}), ...
+                this.finalParams(keys{6}));
         end
-        function Q    = estimateDataFast(this, a, d, fss, p, q0, t0)  
-            Q = this.simulateQ(a, d, fss, p, q0, t0, this.timeInterpolants);
+        function Q    = estimateDataFast(this, a, d, e, p, q0, t0)  
+            Q = this.fluidQ(a, d, e, p, q0, t0, this.timeInterpolants);
         end  
+        function x    = priorLow(~, x)
+            x = 0.9 * x;
+        end
+        function x    = priorHigh(~, x)
+            x = 1.1 * x;
+        end
  	end 
 
 	%  Created with Newcl by John J. Lee after newfcn by Frank Gonzalez-Morphy 

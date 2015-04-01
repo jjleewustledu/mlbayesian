@@ -488,7 +488,7 @@ classdef MCMC < mlbayesian.IMCMC
                         ilpmax = m;
                     end
                 end
-
+                
                 %% assure that these are not repeated
                 this.lpPopulations(ilpmin) = 0.0;
                 this.lpPopulations(ilpmax) = 0.0;

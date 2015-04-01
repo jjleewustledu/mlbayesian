@@ -1,4 +1,4 @@
-classdef IBayesianProblem  
+classdef (Abstract) IBayesianProblem  
 	%% IBAYESIANPROBLEM is used by IMCMC, MCMC; most properties and some methods are requested by MCMC   
 
 	%  $Revision$ 
@@ -16,9 +16,14 @@ classdef IBayesianProblem
         paramsManager   % mlbayesian.IBayesianParameters
         mcmc            % mlbayesian.IMCMC
         bestFitParams   % numeric 
- 	end 
+        expectedBestFitParams
+    end 
 
-	methods (Abstract)
+    methods (Static, Abstract)
+        indexOf(vector, value)
+    end
+    
+	methods (Abstract) 
         estimateParameters(this)
         estimateData(this)     % objective interface for human readability
         estimateDataFast(this) % speed-optimal interface
