@@ -105,7 +105,7 @@ classdef (Abstract) AbstractBayesianProblem < mlbayesian.IBayesianProblem
             t   = this.ensureRow(t);
             dts = t(2:end) - t(1:end-1);
             dt1 = t(2) - t(1);
-            tf  = all(abs(dt1*ones(1,length(dts)) - dts) < 2*eps);
+            tf  = all(abs(dt1*ones(1,length(dts)) - dts) < eps('single'));
         end
         function t  = ensureRow(~, t)
             if (size(t,1) > size(t,2))

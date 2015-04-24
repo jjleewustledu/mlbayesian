@@ -18,6 +18,8 @@ classdef Test_BestGammaFluid < matlab.unittest.TestCase
  		testObj 
         times = 0:119
         testFolder = '/Users/jjlee/Local/src/mlcvl/mlbayesian/test/+mlbayesian_unittest'
+        test_plots = false
+        test_mcmc  = true
     end 
     
     properties (Dependent)        
@@ -51,7 +53,10 @@ classdef Test_BestGammaFluid < matlab.unittest.TestCase
     end
 
 	methods (Test) 
+        %% TEST WITH PLOTTING
+        
  		function test_plotAs(this)
+            if (~this.test_plots); return; end
             figure
             hold on
             a_ = [1 2 4 8 16 32];
@@ -66,6 +71,7 @@ classdef Test_BestGammaFluid < matlab.unittest.TestCase
             ylabel('arbitrary');
  		end 
  		function test_plotDs(this)
+            if (~this.test_plots); return; end
             figure
             hold on
             d_ = [1 2 3 4 5 6 7 8 9];
@@ -80,6 +86,7 @@ classdef Test_BestGammaFluid < matlab.unittest.TestCase
             ylabel('arbitrary');
  		end  
  		function test_plotEs(this)
+            if (~this.test_plots); return; end
             figure
             hold on
             e_ = [0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9];
@@ -94,6 +101,7 @@ classdef Test_BestGammaFluid < matlab.unittest.TestCase
             ylabel('arbitrary');
  		end 
  		function test_plotPs(this)
+            if (~this.test_plots); return; end
             figure
             hold on
             p_ = [0.5 0.75 0.9 1 1.1 1.5 2 3];
@@ -108,6 +116,7 @@ classdef Test_BestGammaFluid < matlab.unittest.TestCase
             ylabel('arbitrary');
  		end 
  		function test_plotQ0s(this)
+            if (~this.test_plots); return; end
             figure
             hold on
             q0_ = [0.5 1 2 4 8] * 1e7;
@@ -122,6 +131,7 @@ classdef Test_BestGammaFluid < matlab.unittest.TestCase
             ylabel('arbitrary');
  		end 
  		function test_plotT0s(this)
+            if (~this.test_plots); return; end
             figure
             hold on
             t0_ = [0 4 8 16 32 64];
@@ -135,8 +145,14 @@ classdef Test_BestGammaFluid < matlab.unittest.TestCase
             xlabel('time/s');
             ylabel('arbitrary');
         end 
+        %% MCMC TESTS
         
         function test_simulateMcmc(this)
+            %% TEST_SIMULATEMCMC constructs for mlbayesian.BestGammaFluid a parameter map as a test-case, 
+            %  then runs BestGammaFluid's MCMC to fit the test-case.  This is a test of BestGammaFluid's ability to fit 
+            %  a synthetic result created directly from it's own kernel model.   
+            
+            if (~this.test_mcmc); return; end
             import mlbayesian.*;
             this.testObj = BestGammaFluid;            
             aMap = containers.Map; 
@@ -151,7 +167,11 @@ classdef Test_BestGammaFluid < matlab.unittest.TestCase
             o = BestGammaFluid.simulateMcmc(this.a, this.d, this.e, this.p, this.q0, this.t0, this.times, aMap);
             this.assertEqual(o.bestFitParams, o.expectedBestFitParams, 'RelTol', 0.05);
         end
-        function test_GammaFluid(this)            
+        function test_GammaFluid(this)  
+            %% TEST_GAMMAFLUID invokes BestGammaFluid.runGammaFluid on synthetic data; best-fit parameters
+            %  must match expected values to relative tolerance of 0.05.
+             
+            if (~this.test_mcmc); return; end         
             this.testObj = mlbayesian.BestGammaFluid.runGammaFluid(this.times, this.testFluidQ);
             o = this.testObj;
             
