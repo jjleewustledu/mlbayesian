@@ -110,6 +110,8 @@ classdef MCMC < mlbayesian.IMCMC
             %% initialize the MCMC
             %% %%%%%%%%%%%%%%%%%%%
             
+            if (this.verbosity > eps)
+                fprintf('mlbayesian.MCMC.ctor:  initializing MCMC'); end
             for m = 1:this.nPop
                 this.paramsSigmas = (this.paramsData.max - this.paramsData.min)/10.0;
                 for k = 1:this.nParams
@@ -129,10 +131,12 @@ classdef MCMC < mlbayesian.IMCMC
             %
             %  after J. S. Shimony, Mar, 2014
 
-            %% %%%%%%%%%%%%%%%%%%%%%%%%
-            %% annealing /burn in phase
-            %% %%%%%%%%%%%%%%%%%%%%%%%%
-
+            %% %%%%%%%%%%%%%%%%%%%%%%%
+            %% annealing/burn-in phase
+            %% %%%%%%%%%%%%%%%%%%%%%%%
+            
+            if (this.verbosity > eps)
+                fprintf('mlbayesian.MCMC.runMcmc:  annealing/burn-in'); end
             lp0 = nan;
             for b = 1:this.nBeta  
                 
@@ -198,6 +202,8 @@ classdef MCMC < mlbayesian.IMCMC
             %% proposal/sampling phase
             %% %%%%%%%%%%%%%%%%%%%%%%%
 
+            if (this.verbosity > eps)
+                fprintf('mlbayesian.MCMC.runMcmc:  proposal/sampling'); end
             for m = 1:this.nPop
                 
                 ptmp = this.paramsPopulations(:,m);
