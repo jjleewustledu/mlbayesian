@@ -33,6 +33,8 @@ classdef MCMC < mlbayesian.IMCMC
         annealingSdpar
         annealingInitz
         bestFitParams
+        meanParams
+        stdParams
         
         lpBetas
         lpPopulations
@@ -41,9 +43,6 @@ classdef MCMC < mlbayesian.IMCMC
         paramsHist 
         logProbQC  
         stdOfError 
-        
-        showBestFit    = true
-        showFinalStats = true
     end
     
     properties (Dependent)
@@ -268,11 +267,11 @@ classdef MCMC < mlbayesian.IMCMC
             avpar  = this.annealingAvpar;
             this.lpFinal = lp1;
 
-            if (this.showBestFit);    this.printBestFit; end
-            if (this.showFinalStats); this.printFinalStats; end
-            if (this.showPlots);      this.histParametersDistributions; end
-            if (this.showPlots);      this.histStdOfError; end
-            if (this.showPlots);      this.plotLogProbabilityQC; end
+            this = this.printBestFit;
+            this = this.printFinalStats; 
+            if (this.showPlots); this.histParametersDistributions; end
+            if (this.showPlots); this.histStdOfError; end
+            if (this.showPlots); this.plotLogProbabilityQC; end
         end    
         function [lprob,paramsVec]   = logProbability(this, paramsVec, beta_, lpFlag)
             %% LOGPROBABILITY
@@ -302,14 +301,14 @@ classdef MCMC < mlbayesian.IMCMC
             end
         end
 
-        function printBestFit(this)
+        function this = printBestFit(this)
             
             % print best fit member of population
             for k = 1:this.nParams
                 fprintf('BEST-FIT    param %3s value %f\n', this.paramIndexToLabel(k), this.bestFitParams(k));
             end
         end
-        function printFinalStats(this)
+        function this = printFinalStats(this)
             
             avpar = this.annealingInitz;
             sdpar = this.annealingInitz;
@@ -334,11 +333,13 @@ classdef MCMC < mlbayesian.IMCMC
             sdpar = std(this.paramsPopulations'); %#ok<UDIM>
             fprintf('\n');
             for k = 1:this.nParams
+                this.meanParams(k) = avpar(k);
+                this.stdParams(k)  = sdpar(k);
                 fprintf('FINAL STATS param %3s mean  %f\t std %f\n', this.paramIndexToLabel(k), avpar(k), sdpar(k));
             end       
-            q = this.bayesianProblem_.sumSquaredErrors(this.bestFitParams);
-            fprintf('FINAL STATS Q            %g\n', q);
+            q  = this.bayesianProblem_.sumSquaredErrors(this.bestFitParams);
             nq = q/sum(abs(this.dependentData).^2);
+            fprintf('FINAL STATS Q            %g\n', q);
             fprintf('FINAL STATS Q normalized %g\n', nq);
         end        
         

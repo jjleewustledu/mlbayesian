@@ -113,19 +113,22 @@ classdef BayesianParameters < mlbayesian.IBayesianParameters
             v = this.paramsMap(key).mean;
         end
         function        checkParams(this)
-            if (any(this.mean_ < this.min_) || any(this.max_ < this.mean_))
+            min  = this.min_;
+            mean = this.mean_;
+            max  = this.max_;
+            if (any(mean < min) || any(max < mean))
                 fprintf('\n');
                 fprintf('ERROR:  Prior mean is outside [min max].\n');
                 this.printParams;
                 error('mlbayesian:parameterOutOfRange', 'BayesianParameters.checkParams');
             end
-            if (any(this.max_ < this.min_))                
+            if (any(max < min))                
                 fprintf('\n');
                 fprintf('ERROR:  Prior min > max.\n');
                 this.printParams;
                 error('mlbayesian:parameterOutOfRange', 'BayesianParameters.checkParams');
             end
-            if (any(this.max_ == this.min_))
+            if (any(max == min))
                 fprintf('\n');
                 fprintf('ERROR:  Parameters will create fault attempting to access mlbayesian.MCMC.lpPopulations(0); \n');
                 fprintf('index must be a positive integer or logical.\n');

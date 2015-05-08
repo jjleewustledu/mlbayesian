@@ -19,16 +19,24 @@ classdef (Abstract) AbstractBayesianProblem < mlbayesian.IBayesianProblem
     end
     
     properties (Dependent)
-        bestFitParams
         expectedBestFitParams
+        bestFitParams
+        meanParams
+        stdParams
     end
     
     methods %% GET
+        function e = get.expectedBestFitParams(this)
+            e = this.expectedBestFitParams_;
+        end
         function p = get.bestFitParams(this)
             p = this.mcmc.bestFitParams;
         end
-        function e = get.expectedBestFitParams(this)
-            e = this.expectedBestFitParams_;
+        function p = get.meanParams(this)
+            p = this.mcmc.meanParams;
+        end
+        function p = get.stdParams(this)
+            p = this.mcmc.stdParams;
         end
     end
     
@@ -71,6 +79,12 @@ classdef (Abstract) AbstractBayesianProblem < mlbayesian.IBayesianProblem
         end
         function x    = finalParams(this, key)
             x = this.bestFitParams(this.paramsManager.paramsIndices(key));
+        end   
+        function x    = finalMeans(this, key)
+            x = this.meanParams(this.paramsManager.paramsIndices(key));
+        end   
+        function x    = finalStds(this, key)
+            x = this.stdParams(this.paramsManager.paramsIndices(key));
         end      
         function ensureKeyOrdering(this, currentKeys)
             storedKeys = this.paramsManager.paramsMap.keys;
