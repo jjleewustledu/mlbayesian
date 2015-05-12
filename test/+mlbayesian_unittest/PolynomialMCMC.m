@@ -1,5 +1,5 @@
-classdef PolynomialMCMC < mlbayesian.IBayesianProblem
-	%% POLYNOMIALMCMC is for testing MCMC implementations; MCMC requires access to an IBayesianProblem
+classdef PolynomialMCMC < mlbayesian.AbstractMcmcProblem
+	%% POLYNOMIALMCMC is for testing MCMC implementations; MCMC requires access to an AbstractMcmcProblem
 
 	%  $Revision$ 
  	%  was created $Date$ 
@@ -9,23 +9,28 @@ classdef PolynomialMCMC < mlbayesian.IBayesianProblem
  	%  developed on Matlab 8.3.0.532 (R2014a) 
  	%  $Id$ 
     
-    properties
-        independentData
-        dependentData
-        paramsManager
-        mcmc    
-        showPlots = true
+    properties 
+        baseTitle = 'no title'
+        xLabel    = 'x label'
+        yLabel    = 'y label'
     end
     
-    properties (Dependent)
-        bestFitParams
-    end
-    
-    methods %% GET
-        function p = get.bestFitParams(this)
-            p = this.mcmc.bestFitParams;
-        end
-    end
+%     properties
+%         independentData
+%         dependentData
+%         paramsManager
+%         mcmc    
+%     end
+%     
+%     properties (Dependent)
+%         bestFitParams
+%     end
+%     
+%     methods %% GET
+%         function p = get.bestFitParams(this)
+%             p = this.mcmc.bestFitParams;
+%         end
+%     end
     
 	methods
         function this = PolynomialMCMC(indDat, depDat)

@@ -10,7 +10,6 @@ classdef Kinetics3McmcProblem < mlbayesian.AbstractMcmcProblem
  	%  $Id$ 
     
     properties
-        showPlots = true
         baseTitle = 'Kinetics3McmcProblem'
         xLabel    = 'times'
         yLabel    = 'wellcounts'

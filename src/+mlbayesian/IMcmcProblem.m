@@ -18,8 +18,9 @@ classdef (Abstract) IMcmcProblem
         length % of dependent_data = f(time_interpolants), which must have the same array sizes
         dt
         times            % synonym of independentData
-        timeInterpolants % synonym of independentData
-        timeFinal
+        timeInterpolants % synonym of independentData        
+        timeInitial      % independentData(1)
+        timeFinal        % independentData(end)
         
         NPROPOSALS % number of loops in parameter prob phase
         NPOP       % number of population
@@ -31,6 +32,8 @@ classdef (Abstract) IMcmcProblem
         annealingSdpar
         annealingInitz
         
+        showAnnealing
+        showBeta
         showPlots % boolean
  	end 
 

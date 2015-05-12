@@ -13,7 +13,6 @@ classdef BestGammaFluid < mlbayesian.AbstractMcmcProblem
  	 
 
 	properties
-        showPlots = true	 
         baseTitle = 'BestGammaFluid'
         xLabel    = 'times/s'
         yLabel    = 'wellcounts'

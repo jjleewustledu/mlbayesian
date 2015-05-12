@@ -37,6 +37,8 @@ classdef IMCMC
         nParams
         nSamples
         nProposalsQC
+        showAnnealing
+        showBeta
         showPlots
     end
 

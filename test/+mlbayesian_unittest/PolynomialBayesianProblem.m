@@ -1,4 +1,4 @@
-classdef PolynomialBayesianProblem < mlbayesian.AbstractBayesianProblem
+classdef PolynomialBayesianProblem < mlbayesian.AbstractMcmcProblem
 	%% POLYNOMIALPROBLEM is for testing AbstractBayesianProblem implementations
 
 	%  $Revision$ 
@@ -10,12 +10,14 @@ classdef PolynomialBayesianProblem < mlbayesian.AbstractBayesianProblem
  	%  $Id$ 
     
     properties
-        showPlots = true
+        baseTitle = 'no title'
+        xLabel    = 'x label'
+        yLabel    = 'y label'
     end
     
 	methods 
         function this = PolynomialBayesianProblem(t, y)
-            this = this@mlbayesian.AbstractBayesianProblem(t, y);
+            this = this@mlbayesian.AbstractMcmcProblem(t, y);
         end
         function this = estimateParameters(this)
             

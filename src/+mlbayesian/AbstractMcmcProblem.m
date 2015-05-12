@@ -12,11 +12,18 @@ classdef (Abstract) AbstractMcmcProblem < mlbayesian.AbstractBayesianProblem & m
  	%  developed on Matlab 8.4.0.150421 (R2014b) 
  	%  $Id$ 
  	 
+    properties    
+        showAnnealing = true
+        showBeta      = false
+        showPlots     = true
+    end
+    
     properties (Dependent)
         length % of dependent_data = f(time_interpolants), which must have the same array sizes
         dt
         times
         timeInterpolants
+        timeInitial
         timeFinal
         
         NPROPOSALS % number of loops in parameter prob phase
@@ -35,13 +42,16 @@ classdef (Abstract) AbstractMcmcProblem < mlbayesian.AbstractBayesianProblem & m
             le = length(this.independentData);
         end
         function t  = get.dt(this)
-            t = this.timeFinal/(this.length - 1);
+            t = (this.timeFinal - this.timeInitial)/(this.length - 1);
         end
         function t  = get.times(this)
             t = this.independentData;
         end
         function ti = get.timeInterpolants(this)
             ti = this.independentData;
+        end
+        function tf = get.timeInitial(this)
+            tf = this.independentData(1);
         end
         function tf = get.timeFinal(this)
             tf = this.independentData(end);

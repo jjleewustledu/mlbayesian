@@ -10,7 +10,6 @@ classdef PolynomialMcmcProblem < mlbayesian.AbstractMcmcProblem
  	%  $Id$ 
     
     properties
-        showPlots = true
         baseTitle = 'PolynomialMcmcProblem'
         xLabel    = 'ordinate'
         yLabel    = 'abscissa'

@@ -13,7 +13,6 @@ classdef GeneralizedGammaProblem < mlbayesian.AbstractMcmcProblem
  	 
 
 	properties  	
-        showPlots = true	 
         baseTitle = 'GeneralizedGammaProblem'
         xLabel    = 'times/s'
         yLabel    = 'wellcounts'

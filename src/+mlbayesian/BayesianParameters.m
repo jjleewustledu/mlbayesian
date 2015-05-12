@@ -138,7 +138,7 @@ classdef BayesianParameters < mlbayesian.IBayesianParameters
                 error('mlbayesian:parameterOutOfRange', 'BayesianParameters.checkParams');
             end
         end
-        function        printParams(this)            
+        function        printParams(this)
             keys = this.paramsMap.keys;  
             fprintf('\n');
             fprintf('Param. Key \t\tMin \tMean \tMax\n');

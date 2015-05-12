@@ -12,7 +12,7 @@ classdef MCMC < mlbayesian.IMCMC
 
     properties (Constant)
         NBINS    = 50   % nbins for hist
-        FRACPEEK =  0.2
+        FRACPEEK =  0.333
         PARPEN   =  0.0 % -1.0 % minimal penalty for each param (unused)
         MAX_PROP = 1000
     end
@@ -49,6 +49,8 @@ classdef MCMC < mlbayesian.IMCMC
         nParams
         nSamples
         nProposalsQC
+        showAnnealing
+        showBeta
         showPlots
         verbosity
     end
@@ -61,10 +63,16 @@ classdef MCMC < mlbayesian.IMCMC
             n = length(this.dependentData);
         end
         function n = get.nProposalsQC(this)
-            n = this.FRACPEEK * this.nProposals;
+            n = ceil(this.FRACPEEK * this.nProposals);
+        end
+        function tf = get.showAnnealing(this)
+            tf = this.mcmcProblem_.showAnnealing;
+        end
+        function tf = get.showBeta(this)
+            tf = this.mcmcProblem_.showBeta;
         end
         function tf = get.showPlots(this)
-            tf = this.bayesianProblem_.showPlots;
+            tf = this.mcmcProblem_.showPlots;
         end
         function v  = get.verbosity(this)
             v = this.verbosity_;
@@ -72,13 +80,13 @@ classdef MCMC < mlbayesian.IMCMC
     end
     
 	methods        
-        function this                = MCMC(bayesProb, depDat, paramsDat)
+        function this                = MCMC(mcmcProbl, depDat, paramsDat)
             
             p = inputParser;
-            addRequired(p, 'bayesProb', @(x) isa(x, 'mlbayesian.IBayesianProblem'));
+            addRequired(p, 'mcmcProbl', @(x) isa(x, 'mlbayesian.IMcmcProblem'));
             addRequired(p, 'depDat',    @isnumeric);
             addRequired(p, 'paramsDat', @(x) isa(x, 'mlbayesian.IBayesianParameters'));
-            parse(p, bayesProb, depDat, paramsDat);            
+            parse(p, mcmcProbl, depDat, paramsDat);            
             this = this.setVerbosity;
             
             this.nProposals        = p.Results.paramsDat.nProposals;
@@ -86,7 +94,7 @@ classdef MCMC < mlbayesian.IMCMC
             this.nPopRep           = p.Results.paramsDat.nPopRep;
             this.nBeta             = p.Results.paramsDat.nBeta;
             this.nAnneal           = p.Results.paramsDat.nAnneal;        
-            this.bayesianProblem_  = p.Results.bayesProb;
+            this.mcmcProblem_      = p.Results.mcmcProbl;
             this.dependentData     = p.Results.depDat;
             this.paramsData        = p.Results.paramsDat;   
             this.paramsBetas       = zeros(this.nParams, this.nBeta);  
@@ -270,8 +278,10 @@ classdef MCMC < mlbayesian.IMCMC
             this = this.printBestFit;
             this = this.printFinalStats; 
             if (this.showPlots); this.histParametersDistributions; end
-            if (this.showPlots); this.histStdOfError; end
-            if (this.showPlots); this.plotLogProbabilityQC; end
+            if (1 == this.verbosity)
+                if (this.showPlots); this.plotLogProbabilityQC; end
+                if (this.showPlots); this.histStdOfError; end
+            end
         end    
         function [lprob,paramsVec]   = logProbability(this, paramsVec, beta_, lpFlag)
             %% LOGPROBABILITY
@@ -282,8 +292,8 @@ classdef MCMC < mlbayesian.IMCMC
             %
             %  from J. S. Shimony, Mar, 2014
             
-            paramsVec = this.bayesianProblem_.adjustParams(paramsVec);
-            lprob = this.bayesianProblem_.sumSquaredErrors(paramsVec);
+            paramsVec = this.mcmcProblem_.adjustParams(paramsVec);
+            lprob = this.mcmcProblem_.sumSquaredErrors(paramsVec);
             
             if (lpFlag == -1)
                 return
@@ -337,7 +347,7 @@ classdef MCMC < mlbayesian.IMCMC
                 this.stdParams(k)  = sdpar(k);
                 fprintf('FINAL STATS param %3s mean  %f\t std %f\n', this.paramIndexToLabel(k), avpar(k), sdpar(k));
             end       
-            q  = this.bayesianProblem_.sumSquaredErrors(this.bestFitParams);
+            q  = this.mcmcProblem_.sumSquaredErrors(this.bestFitParams);
             nq = q/sum(abs(this.dependentData).^2);
             fprintf('FINAL STATS Q            %g\n', q);
             fprintf('FINAL STATS Q normalized %g\n', nq);
@@ -394,7 +404,7 @@ classdef MCMC < mlbayesian.IMCMC
     %% PRIVATE
     
     properties (Access = 'private')
-        bayesianProblem_
+        mcmcProblem_
         verbosity_
     end
     
@@ -403,18 +413,19 @@ classdef MCMC < mlbayesian.IMCMC
             this.verbosity_ = str2num(getenv('VERBOSITY')); %#ok<ST2NM>
             if (isempty(this.verbosity_))
                 this.verbosity_ = str2num(getenv('VERBOSE')); end %#ok<ST2NM>
+            fprintf('mlbayesian.MCMC.setVerbosity:\n');
+            fprintf('\tverbosity level is %g;\n', this.verbosity);
+            fprintf('\tadjust by setting ENV variable VERBOSITY to [0 1] or VERBOSE to true/false.\n');
         end
         function              printBeta(this, b, beta, lp0)
-            if (this.verbosity < eps)
-                return; end
+            if ( this.verbosity < 0.3); return; end
+            if (~this.showBeta); return; end
             fprintf('annealing step %d beta (1/temp) %d logProb0 %d\n', b, beta, lp0); 
         end        
         function              printAnnealing(this, b, parn)
-            if (this.verbosity < 0.2)
-                return; end
-            if (1                        == b || ...
-                this.FRACPEEK*this.nBeta == b || ...
-                this.nBeta               == b)
+            if ( this.verbosity < 0.2); return; end
+            if (~this.showAnnealing); return; end
+            if ( ceil(this.FRACPEEK*this.nBeta) == b)
                 fprintf('\n');
                 for k = 1:this.nParams
                     fprintf('annealing step %d param %3s mean %f\t std %f\t sigma %f\t acc %f\n',...
@@ -526,13 +537,13 @@ classdef MCMC < mlbayesian.IMCMC
             end
         end
         function [lp1,this] = updateHistograms(this, j, m, lp0, lp1, ptmp)
-            if (mod(j,1/this.FRACPEEK) == 0)
-                this.logProbQC(m, j*this.FRACPEEK) = lp0;
+            if (mod(j,ceil(1/this.FRACPEEK)) == 0)
+                this.logProbQC(m, ceil(j*this.FRACPEEK)) = lp0;
                 for k = 1:this.nParams
-                    this.paramsHist(k,(m-1)*this.nProposalsQC + j*this.FRACPEEK) = ptmp(k);
+                    this.paramsHist(k,(m-1)*this.nProposalsQC + ceil(j*this.FRACPEEK)) = ptmp(k);
                 end
                 lp1 = this.logProbability(ptmp, 1.0, -1);
-                this.stdOfError((m-1)*this.nProposalsQC + j*this.FRACPEEK) = sqrt(lp1/(this.nSamples-2));
+                this.stdOfError((m-1)*this.nProposalsQC + ceil(j*this.FRACPEEK)) = sqrt(lp1/(this.nSamples-2));
             end
         end
     end

@@ -13,7 +13,6 @@ classdef GeneralizedGammaFluid < mlbayesian.AbstractMcmcProblem
  	 
 
 	properties  	
-        showPlots = true	 
         baseTitle = 'GeneralizedGammaFluid'
         xLabel    = 'times/s'
         yLabel    = 'wellcounts'

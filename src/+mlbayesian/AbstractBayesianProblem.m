@@ -102,9 +102,7 @@ classdef (Abstract) AbstractBayesianProblem < mlbayesian.IBayesianProblem
         expectedBestFitParams_
     end
     
-    %% PRIVATE
-    
-    methods (Access = 'private')
+    methods (Access = 'protected')
         function x = ditherZeros(~, x)
             if (any(0 == x))
                 x = x + (rand(1) + 1) * eps;
