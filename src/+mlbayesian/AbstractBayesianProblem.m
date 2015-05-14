@@ -42,9 +42,12 @@ classdef (Abstract) AbstractBayesianProblem < mlbayesian.IBayesianProblem
     
     methods (Static)        
         function idx  = indexOf(t, t0)
+            %% INDEXOF finds the array-index closest to t0 for array t
+            %  Usage:  idx = this.indexOf(t, t0)
+            
             metric = abs(t - t0);
             [~,idx] = min(metric(:));
-            idx = idx + 1;
+            idx = floor(idx) + 1;
         end
     end
     

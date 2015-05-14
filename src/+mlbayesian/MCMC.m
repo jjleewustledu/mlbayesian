@@ -12,7 +12,7 @@ classdef MCMC < mlbayesian.IMCMC
 
     properties (Constant)
         NBINS    = 50   % nbins for hist
-        FRACPEEK =  0.333
+        FRACPEEK =  0.2
         PARPEN   =  0.0 % -1.0 % minimal penalty for each param (unused)
         MAX_PROP = 1000
     end
@@ -537,13 +537,13 @@ classdef MCMC < mlbayesian.IMCMC
             end
         end
         function [lp1,this] = updateHistograms(this, j, m, lp0, lp1, ptmp)
-            if (mod(j,ceil(1/this.FRACPEEK)) == 0)
-                this.logProbQC(m, ceil(j*this.FRACPEEK)) = lp0;
+            if (mod(j, ceil(1/this.FRACPEEK)) == 0)
+                this.logProbQC(m, j*this.FRACPEEK) = lp0;
                 for k = 1:this.nParams
-                    this.paramsHist(k,(m-1)*this.nProposalsQC + ceil(j*this.FRACPEEK)) = ptmp(k);
+                    this.paramsHist(k,(m-1)*this.nProposalsQC + j*this.FRACPEEK) = ptmp(k);
                 end
                 lp1 = this.logProbability(ptmp, 1.0, -1);
-                this.stdOfError((m-1)*this.nProposalsQC + ceil(j*this.FRACPEEK)) = sqrt(lp1/(this.nSamples-2));
+                this.stdOfError((m-1)*this.nProposalsQC + j*this.FRACPEEK) = sqrt(lp1/(this.nSamples-2));
             end
         end
     end
