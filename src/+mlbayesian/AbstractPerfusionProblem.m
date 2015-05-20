@@ -45,6 +45,9 @@ classdef (Abstract) AbstractPerfusionProblem < mlbayesian.AbstractMcmcProblem & 
         function args = interpolateData
             args = {};
         end
+        function this = simulateMcmc
+            this = [];
+        end
         
         function m = moment1(t, c)
             m = sum(t .* c) / sum(c);
@@ -78,9 +81,6 @@ classdef (Abstract) AbstractPerfusionProblem < mlbayesian.AbstractMcmcProblem & 
             counts(end-length(counts0)+1:end) = counts0;
             counts = counts - min(counts);
         end
-        function this = simulateMcmc
-            this = [];
-        end
     end 
     
     methods
@@ -88,6 +88,8 @@ classdef (Abstract) AbstractPerfusionProblem < mlbayesian.AbstractMcmcProblem & 
  			this = this@mlbayesian.AbstractMcmcProblem(varargin{:});
             assert(isnumeric(conc_a));
             this.concentration_a_ = conc_a;
+            this.mtt_a_ = this.moment1(this.times, this.concentration_a);
+            this.mtt_obs_ = this.moment1(this.times, this.concentration_obs);
         end
         function this = estimateAll(this)
             this = this.estimateParameters(this.map);
