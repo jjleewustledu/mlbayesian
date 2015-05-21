@@ -49,6 +49,10 @@ classdef (Abstract) AbstractPerfusionProblem < mlbayesian.AbstractMcmcProblem & 
             this = [];
         end
         
+        function c = handInjection(t, c0, injRate)
+            c = injRate * conv(c0, exp(-injRate*t));
+            c = c(1:length(c0));
+        end
         function m = moment1(t, c)
             m = sum(t .* c) / sum(c);
         end  

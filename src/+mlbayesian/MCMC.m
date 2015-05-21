@@ -349,8 +349,8 @@ classdef MCMC < mlbayesian.IMCMC
             end       
             q  = this.mcmcProblem_.sumSquaredErrors(this.bestFitParams);
             nq = q/sum(abs(this.dependentData).^2);
-            fprintf('FINAL STATS Q            %g\n', q);
-            fprintf('FINAL STATS Q normalized %g\n', nq);
+            fprintf('FINAL STATS Q               %g\n', q);
+            fprintf('FINAL STATS Q normalized    %g\n', nq);
         end        
         
         function histParametersDistributions(this)
