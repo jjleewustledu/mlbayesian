@@ -59,10 +59,22 @@ classdef (Abstract) AbstractPerfusionProblem < mlbayesian.AbstractMcmcProblem & 
         function c = handInjection(t, c0, injRate)
             c = injRate * conv(c0, exp(-injRate*t));
             c = c(1:length(c0));
+        end        
+        function tito = indexTakeOff(curve)
+            maxCurve = max(curve);
+            minCurve = min(curve);
+            for ti = 1:length(curve)
+                if (curve(ti) - minCurve > 0.05 * (maxCurve - minCurve))
+                    break;
+                end
+            end
+            tito = ti - 1;
         end
         function m = moment1(t, c)
-            m = sum(t .* c) / sum(c);
-        end  
+            import mlbayesian.*;
+            tto = t(AbstractPerfusionProblem.indexTakeOff(c));
+            m = sum((t - tto) .* c) / sum(c);
+        end
         function [times,counts] = shiftData(times0, counts0, Dt)
             import mlbayesian.*
             if (Dt > 0)
@@ -118,6 +130,20 @@ classdef (Abstract) AbstractPerfusionProblem < mlbayesian.AbstractMcmcProblem & 
         end
         function ci = itsConcentration_i(this) %#ok<MANU>
             ci = [];
+        end 
+        function r = mttObsOverA(this)
+            r = this.moment1(this.times, this.concentration_obs) / ...
+                this.moment1(this.times, this.itsEstimatedConcentration_a);
+        end
+        function sse  = sumSquaredErrors(this, p)
+            p   = num2cell(p);          
+            sse = sum(abs(this.dependentData - this.estimateDataFast(p{:})).^2) + ...
+                  0.001 * ...
+                  sum(abs(this.dependentData).^2)*abs(this.mttObsOverA - 2.72072035303421).^2;
+            if (sse < eps)
+                sse = sse + (1 + rand(1))*eps; 
+            end
+            %assert(isfinite(sse) && ~isnan(sse), 'AbstractBayesianProblem.p -> %s', cell2str(p));
         end
         function this = save(this)
             this = this.saveas(sprintf('%s.save.mat', class(this)));

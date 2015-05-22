@@ -66,9 +66,11 @@ classdef (Abstract) AbstractBayesianProblem < mlbayesian.IBayesianProblem
             assert(all(size(this.independentData) == size(this.dependentData)));
         end 
         function sse  = sumSquaredErrors(this, p)
-            p   = num2cell(p);
+            p   = num2cell(p);        
             sse = sum(abs(this.dependentData - this.estimateDataFast(p{:})).^2);
-            if (sse < eps); sse = sse + (1 + rand(1))*eps; end
+            if (sse < eps)
+                sse = sse + (1 + rand(1))*eps; 
+            end
             %assert(isfinite(sse) && ~isnan(sse), 'AbstractBayesianProblem.p -> %s', cell2str(p));
         end
         function ps   = adjustParams(~, ps)
