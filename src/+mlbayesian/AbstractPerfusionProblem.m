@@ -45,6 +45,13 @@ classdef (Abstract) AbstractPerfusionProblem < mlbayesian.AbstractMcmcProblem & 
         function args = interpolateData
             args = {};
         end
+        function c = myPchip(t0, c0, t)
+            if (t(end) > t0(end))
+                t0(end+1) = t(end);
+                c0(end+1) = c0(end);
+            end
+            c = pchip(t0, c0, t);
+        end
         function this = simulateMcmc
             this = [];
         end
@@ -105,6 +112,9 @@ classdef (Abstract) AbstractPerfusionProblem < mlbayesian.AbstractMcmcProblem & 
         end
         function ed   = estimateDataFast(this) %#ok<MANU>
             ed = [];
+        end
+        function ca = itsEstimatedConcentration_a(this)
+            ca = this.concentration_a;
         end
         function ci = itsConcentration_i(this) %#ok<MANU>
             ci = [];
