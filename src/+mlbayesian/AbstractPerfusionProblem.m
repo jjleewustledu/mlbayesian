@@ -8,6 +8,10 @@ classdef (Abstract) AbstractPerfusionProblem < mlbayesian.AbstractMcmcProblem & 
  	%  and checked into repository $URL$,  
  	%  developed on Matlab 8.5.0.197613 (R2015a) 
  	%  $Id$ 
+    
+    properties 
+        mttObsOverA0 = 2.72072035303421
+    end
 
     properties (Dependent)        
         concentration_a
@@ -68,7 +72,7 @@ classdef (Abstract) AbstractPerfusionProblem < mlbayesian.AbstractMcmcProblem & 
                     break;
                 end
             end
-            tito = ti - 1;
+            tito = max(1, ti - 1);
         end
         function m = moment1(t, c)
             import mlbayesian.*;
@@ -134,16 +138,6 @@ classdef (Abstract) AbstractPerfusionProblem < mlbayesian.AbstractMcmcProblem & 
         function r = mttObsOverA(this)
             r = this.moment1(this.times, this.concentration_obs) / ...
                 this.moment1(this.times, this.itsEstimatedConcentration_a);
-        end
-        function sse  = sumSquaredErrors(this, p)
-            p   = num2cell(p);          
-            sse = sum(abs(this.dependentData - this.estimateDataFast(p{:})).^2) + ...
-                  0.001 * ...
-                  sum(abs(this.dependentData).^2)*abs(this.mttObsOverA - 2.72072035303421).^2;
-            if (sse < eps)
-                sse = sse + (1 + rand(1))*eps; 
-            end
-            %assert(isfinite(sse) && ~isnan(sse), 'AbstractBayesianProblem.p -> %s', cell2str(p));
         end
         function this = save(this)
             this = this.saveas(sprintf('%s.save.mat', class(this)));
