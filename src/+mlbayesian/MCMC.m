@@ -220,6 +220,7 @@ classdef MCMC < mlbayesian.IMCMC
                 lpmax = lp0;
                 parn = this.annealingInitz; 
                 
+                %% proposal (importance sampling) loop
                 for j = 1:this.nProposals
                     for k = 1:this.nParams
                         
