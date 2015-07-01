@@ -40,7 +40,7 @@ classdef (Abstract) AbstractBayesianProblem < mlbayesian.IBayesianProblem
         end
     end
     
-    methods (Static)        
+    methods (Static)
         function idx  = indexOf(t, t0)
             %% INDEXOF finds the array-index closest to t0 for array t
             %  Usage:  idx = this.indexOf(t, t0)
