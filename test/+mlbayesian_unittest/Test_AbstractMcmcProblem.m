@@ -15,7 +15,7 @@ classdef Test_AbstractMcmcProblem < matlab.unittest.TestCase
 
     properties 
         unittest_home = '/Users/jjlee/Local/src/mlcvl/mlbayesian/test/+mlbayesian_unittest'
-        testProblem = 'polynomial'
+        testProblem = 'kinetics4'
     end
     
 	methods (Test)
@@ -64,7 +64,7 @@ classdef Test_AbstractMcmcProblem < matlab.unittest.TestCase
             import mlpet.*;
             dta = DTA.load('p5661g.dta');
             tsc = TSC.import('p5661wb.tsc');
-            len = min(dta.scanDuration, tsc.scanDuration);
+            len = min(length(dta.timeInterpolants), length(tsc.timeInterpolants));
             timeInterp = tsc.timeInterpolants(1:len);
             Ca = dta.countInterpolants(1:len);
             Q = tsc.becquerelInterpolants(1:len);            
