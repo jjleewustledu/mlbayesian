@@ -12,7 +12,6 @@ classdef BayesianParameters < mlbayesian.IBayesianParameters
     properties        
         nProposals = 100   % number of loops in parameter prob phase
         nPop       =  50   % number of population
-        nPopRep    =   5   % number of population to replace
         nBeta      =  50   % number of temperature steps
         nAnneal    =  20   % number of loops per annealing temp
         

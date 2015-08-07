@@ -20,7 +20,6 @@ classdef MCMC < mlbayesian.IMCMC
     properties
         nProposals = 100 % number of loops in parameter prob phase
         nPop       =  50 % number of population
-        nPopRep    =   5 % number of population to replace
         nBeta      =  50 % number of temperature steps
         nAnneal    =  20 % number of loops per annealing temp
 
@@ -47,6 +46,7 @@ classdef MCMC < mlbayesian.IMCMC
     
     properties (Dependent)
         nParams
+        nPopRep % number of population to replace
         nSamples
         nProposalsQC
         showAnnealing
@@ -58,6 +58,9 @@ classdef MCMC < mlbayesian.IMCMC
     methods %% GET/SET
         function n = get.nParams(this)
             n = this.paramsData.length;
+        end
+        function n = get.nPopRep(this)
+            n = 0.1*this.nPop;
         end
         function n = get.nSamples(this)
             n = length(this.dependentData);
@@ -91,7 +94,6 @@ classdef MCMC < mlbayesian.IMCMC
             
             this.nProposals        = p.Results.paramsDat.nProposals;
             this.nPop              = p.Results.paramsDat.nPop;
-            this.nPopRep           = p.Results.paramsDat.nPopRep;
             this.nBeta             = p.Results.paramsDat.nBeta;
             this.nAnneal           = p.Results.paramsDat.nAnneal;        
             this.mcmcProblem_      = p.Results.mcmcProbl;
@@ -464,26 +466,31 @@ classdef MCMC < mlbayesian.IMCMC
             %% BRETTHORSTADJUSTMENTS adjust proposals al a Bretthorst
 
             for k = 1:this.nParams
+                if (this.paramsData.fixed(k)) 
+                    continue;
+                end
+                
                 if (parn(k) < 0.1*this.nAnneal*this.nPop)
-                        this.paramsSigmas(k) = 0.1*this.paramsSigmas(k);
+                        this.paramsSigmas(k) = 0.2 *this.paramsSigmas(k);
                 elseif (parn(k) < 0.2*this.nAnneal*this.nPop)
-                    if (this.paramsSigmas(k) > 0.1*this.annealingSdpar(k))
-                        this.paramsSigmas(k) = 0.8*this.paramsSigmas(k);
+                    if (this.paramsSigmas(k) > 0.05*this.annealingSdpar(k))
+                        this.paramsSigmas(k) =      this.paramsSigmas(k)/1.2;
                     end
                 elseif (parn(k) > 0.8*this.nAnneal*this.nPop)
-                    if (this.paramsSigmas(k) < 5.0*this.annealingSdpar(k))
-                        this.paramsSigmas(k) = 10.0*this.paramsSigmas(k);
+                    if (this.paramsSigmas(k) <     this.annealingSdpar(k))
+                        this.paramsSigmas(k) = 5.0 *this.paramsSigmas(k);
                     end
-                elseif (parn(k) > 0.55*this.nAnneal*this.nPop)
-                    if (this.paramsSigmas(k) < 5.0*this.annealingSdpar(k))
+                elseif (parn(k) > 0.6*this.nAnneal*this.nPop)
+                    if (this.paramsSigmas(k) <     this.annealingSdpar(k))
                         this.paramsSigmas(k) = 2.0*this.paramsSigmas(k);
                     end
                 elseif (parn(k) > 0.3*this.nAnneal*this.nPop)
-                    if (this.paramsSigmas(k) < 5.0*this.annealingSdpar(k))
+                    if (this.paramsSigmas(k) <     this.annealingSdpar(k))
                         this.paramsSigmas(k) = 1.1*this.paramsSigmas(k);
                     end
                 end
                 if (this.paramsSigmas(k) > (this.paramsData.max(k) - this.paramsData.min(k)))
+                    warning('mlbayesian:parameterOutOfBounds', 'MCMC.paramsSigmas(%i) too large\n', k);
                     this.paramsSigmas(k) =  this.paramsData.max(k) - this.paramsData.min(k);
                 end           
             end  
