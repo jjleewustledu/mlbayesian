@@ -57,7 +57,7 @@ classdef (Abstract) AbstractBayesianProblem < mlbayesian.IBayesianProblem
  			%  Usage:  this = AbstractBayesianProblem([independent_data, dependent_data]) 
             
             p = inputParser;
-            addOptional(p, 'indepData', [], @(x) isnumeric(x) && this.uniformSampling(x));
+            addOptional(p, 'indepData', [], @isnumeric); %% && this.uniformSampling(x)
             addOptional(p,   'depData', [], @isnumeric);
             parse(p, varargin{:});            
  			
