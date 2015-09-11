@@ -14,7 +14,7 @@ classdef MCMC < mlbayesian.IMCMC
         NBINS    = 50   % nbins for hist
         FRACPEEK =  0.2
         PARPEN   =  0.0 % -1.0 % minimal penalty for each param (unused)
-        MAX_PROP = 1000
+        MAX_PROP = 50
     end
     
     properties
