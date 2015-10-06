@@ -15,7 +15,7 @@ classdef (Abstract) AbstractMcmcProblem < mlbayesian.AbstractBayesianProblem & m
     properties    
         showAnnealing = true
         showBeta      = true
-        showPlots     = true
+        showPlots     = false
     end
     
     properties (Dependent)

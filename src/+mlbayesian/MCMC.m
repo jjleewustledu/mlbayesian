@@ -18,10 +18,10 @@ classdef MCMC < mlbayesian.IMCMC
     end
     
     properties
-        nProposals = 100 % number of loops in parameter prob phase
-        nPop       =  50 % number of population
-        nBeta      =  50 % number of temperature steps
-        nAnneal    =  20 % number of loops per annealing temp
+        nProposals % = 100 number of loops in parameter prob phase
+        nPop       % =  50 number of population
+        nBeta      % =  50 number of temperature steps
+        nAnneal    % =  20 number of loops per annealing temp
 
         dependentData        
         paramsData   
