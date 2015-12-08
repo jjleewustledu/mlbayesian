@@ -1,30 +1,23 @@
-classdef MCMC < mlbayesian.IMCMC 
-	%% MCMC has the machinery to do a simple Bayesian estimation;
+classdef McmcCellular < mlbayesian.IMCMC 
+	%% MCMCCELLULAR has the machinery to do a simple Bayesian estimation;
     %  it becomes more verbose for getenv('VERBOSITY') > 0 or for getenv('VERBOSE') == 1.
 
-	%  $Revision$ 
- 	%  was created $Date$ 
- 	%  by $Author$,  
- 	%  last modified $LastChangedDate$ 
- 	%  and checked into repository $URL$,  
- 	%  developed on Matlab 8.3.0.532 (R2014a) 
- 	%  $Id$ 
+	%  $Revision$
+ 	%  was created 23-Nov-2015 17:37:52
+ 	%  by jjlee,
+ 	%  last modified $LastChangedDate$
+ 	%  and checked into repository /Users/jjlee/Local/src/mlcvl/mlbayesian/src/+mlbayesian.
+ 	%% It was developed on Matlab 8.5.0.197613 (R2015a) for MACI64.
 
     properties (Constant)
-        NBINS    = 50   % nbins for hist
-        FRACPEEK =  0.2
-        PARPEN   =  0.0 % -1.0 % minimal penalty for each param (unused)
-        MAX_PROP = 50
+        NBINS       = 50   % nbins for hist
+        FRACPEEK    =  0.2
+        PARPEN      =  0.0 % -1.0 % minimal penalty for each param (unused)
+        MAX_PROP    = 50
+        FRAC_POPREP = 0.1
     end
     
-    properties
-        nProposals % = 100 number of loops in parameter prob phase
-        nPop       % =  50 number of population
-        nBeta      % =  50 number of temperature steps
-        nAnneal    % =  20 number of loops per annealing temp
-
-        dependentData        
-        parameters   
+    properties 
         paramsBetas   
         paramsPopulations   
         paramsSigmas   
@@ -37,16 +30,21 @@ classdef MCMC < mlbayesian.IMCMC
         stdParams
         stdOfError 
         
+        lpQC        
         lpBetas
         lpPopulations
-        lpFinal
-        lpQC          
+        lpFinal        
     end
     
     properties (Dependent)
+        parameters   
         nParams
-        nPopRep % number of population to replace
-        nSamples
+        nProposals % = 100 number of loops in parameter prob phase
+        nPop       % =  50 number of population
+        nPopRep    %       number of population to replace
+        nBeta      % =  50 number of temperature steps
+        nAnneal    % =  20 number of loops per annealing temp
+        nSamples        
         nProposalsQC
         showAnnealing
         showBeta
@@ -55,71 +53,75 @@ classdef MCMC < mlbayesian.IMCMC
     end
     
     methods %% GET/SET
+        function n = get.parameters(this)
+            n = this.mcmcStrategy_.theParameters;
+        end
         function n = get.nParams(this)
             n = this.parameters.length;
         end
+        function n = get.nProposals(this)
+            n = this.parameters.nProposals;
+        end
+        function n = get.nPop(this)
+            n = this.parameters.nPop;
+        end
         function n = get.nPopRep(this)
-            n = 0.1*this.nPop;
+            n = this.FRAC_POPREP * this.nPop;
+        end
+        function n = get.nBeta(this)
+            n = this.parameters.nBeta;
+        end
+        function n = get.nAnneal(this)
+            n = this.parameters.nAnneal;
         end
         function n = get.nSamples(this)
-            n = length(this.dependentData);
+            n = this.parameters.nSamples;
         end
         function n = get.nProposalsQC(this)
             n = ceil(this.FRACPEEK * this.nProposals);
         end
         function tf = get.showAnnealing(this)
-            tf = this.mcmcProblem_.showAnnealing;
+            tf = this.mcmcStrategy_.showAnnealing;
         end
         function tf = get.showBeta(this)
-            tf = this.mcmcProblem_.showBeta;
+            tf = this.mcmcStrategy_.showBeta;
         end
         function tf = get.showPlots(this)
-            tf = this.mcmcProblem_.showPlots;
+            tf = this.mcmcStrategy_.showPlots;
         end
         function v  = get.verbosity(this)
-            v = this.verbosity_;
+            v = this.mcmcStrategy_.verbosity;
         end
     end
     
 	methods        
-        function this                = MCMC(mcmcProbl, depDat, paramsDat)
+        function this                = McmcCellular(mcmcStrat)
             
             p = inputParser;
-            addRequired(p, 'mcmcProbl', @(x) isa(x, 'mlbayesian.AbstractMcmcProblem'));
-            addRequired(p, 'depDat',    @isnumeric);
-            addRequired(p, 'paramsDat', @(x) isa(x, 'mlbayesian.IBayesianParameters'));
-            parse(p, mcmcProbl, depDat, paramsDat);            
-            this = this.setVerbosity;
+            addRequired(p, 'mcmcStrat', @(x) isa(x, 'mlbayesian.IMcmcStrategy'));
+            parse(p, mcmcStrat);
             
-            this.nProposals        = p.Results.paramsDat.nProposals;
-            this.nPop              = p.Results.paramsDat.nPop;
-            this.nBeta             = p.Results.paramsDat.nBeta;
-            this.nAnneal           = p.Results.paramsDat.nAnneal;        
-            this.mcmcProblem_      = p.Results.mcmcProbl;
-            this.dependentData     = p.Results.depDat;
-            this.parameters        = p.Results.paramsDat;   
+            this.mcmcStrategy_     = p.Results.mcmcStrat;    
             this.paramsBetas       = zeros(this.nParams, this.nBeta);  
             this.paramsPopulations = zeros(this.nParams, this.nPop);   
-            this.paramsSigmas      = zeros(this.nParams, 1);       
+            this.paramsSigmas      = zeros(this.nParams, 1);  
+            this.bestFitParams     = zeros(this.nParams, 1);  
+            this.stdOfError        = zeros(this.nPop*this.nProposalsQC, 1); % follow the standard deviation of error     
             this.annealingAvpar    = zeros(this.nParams, 1);
             this.annealingSdpar    = zeros(this.nParams, 1);
             this.annealingInitz    = zeros(this.nParams, 1);
-            this.bestFitParams     = zeros(this.nParams, 1);
             
             this.lpBetas       = zeros(this.nBeta, 1);
             this.lpPopulations = zeros(this.nPop, 1);            
-            
-            
-            this.paramsHist = zeros(this.nParams, this.nPop*this.nProposalsQC); % for histogram of parameters
-            this.lpQC  = zeros(this.nPop, this.nProposalsQC);              % qc on the lprob
-            this.stdOfError = zeros(this.nPop*this.nProposalsQC, 1);            % follow the standard dev of error            
+            this.lpQC          = zeros(this.nPop, this.nProposalsQC);              % qc on the lprob
+            this.paramsHist    = zeros(this.nParams, this.nPop*this.nProposalsQC); % for histogram of parameters          
             
             %% %%%%%%%%%%%%%%%%%%%
-            %% initialize the MCMC
+            %% initialize the Mcmc
             %% %%%%%%%%%%%%%%%%%%%
             
             if (this.verbosity > eps)
-                fprintf('mlbayesian.MCMC.ctor:  initializing MCMC'); end
+                fprintf('mlbayesian.McmcCellular.ctor:  initializing McmcCellular'); end
             for m = 1:this.nPop
                 this.paramsSigmas = (this.parameters.max - this.parameters.min)/10.0;
                 for k = 1:this.nParams
@@ -135,7 +137,7 @@ classdef MCMC < mlbayesian.IMCMC
             end
         end  
         function [parmax,avpar,this] = runMcmc(this)
-            %% MCMC (Markov Chain Monte-Carlo) has the machinery to do a simple Bayesian estimation
+            %% MCMCCELLULAR (Markov Chain Monte-Carlo) has the machinery to do a simple Bayesian estimation
             %
             %  after J. S. Shimony, Mar, 2014
 
@@ -144,7 +146,7 @@ classdef MCMC < mlbayesian.IMCMC
             %% %%%%%%%%%%%%%%%%%%%%%%%
             
             if (this.verbosity > eps)
-                fprintf('mlbayesian.MCMC.runMcmc:  annealing/burn-in'); end
+                fprintf('mlbayesian.McmcCellular.runMcmc:  annealing/burn-in'); end
             lp0 = nan;
             for b = 1:this.nBeta  
                 
@@ -211,7 +213,7 @@ classdef MCMC < mlbayesian.IMCMC
             %% %%%%%%%%%%%%%%%%%%%%%%%
 
             if (this.verbosity > eps)
-                fprintf('mlbayesian.MCMC.runMcmc:  proposal/sampling'); end
+                fprintf('mlbayesian.McmcCellular.runMcmc:  proposal/sampling'); end
             for m = 1:this.nPop
                 
                 ptmp = this.paramsPopulations(:,m);
@@ -294,8 +296,8 @@ classdef MCMC < mlbayesian.IMCMC
             %
             %  from J. S. Shimony, Mar, 2014
             
-            paramsVec = this.mcmcProblem_.adjustParams(paramsVec);
-            lprob = this.mcmcProblem_.sumSquaredErrors(paramsVec);
+            paramsVec = this.mcmcStrategy_.adjustParams(paramsVec);
+            lprob = this.mcmcStrategy_.sumSquaredErrors(paramsVec);
             
             if (lpFlag == -1)
                 return
@@ -348,11 +350,7 @@ classdef MCMC < mlbayesian.IMCMC
                 this.meanParams(k) = avpar(k);
                 this.stdParams(k)  = sdpar(k);
                 fprintf('FINAL STATS param %3s mean  %f\t std %f\n', this.paramIndexToLabel(k), avpar(k), sdpar(k));
-            end       
-            q  = this.mcmcProblem_.sumSquaredErrors(this.bestFitParams);
-            nq = q/sum(abs(this.dependentData).^2);
-            fprintf('FINAL STATS Q               %g\n', q);
-            fprintf('FINAL STATS Q normalized    %g\n', nq);
+            end
         end        
         
         function histParametersDistributions(this)
@@ -406,19 +404,10 @@ classdef MCMC < mlbayesian.IMCMC
     %% PRIVATE
     
     properties (Access = 'private')
-        mcmcProblem_
-        verbosity_
+        mcmcStrategy_
     end
     
     methods (Access = 'private')
-        function this =       setVerbosity(this)
-            this.verbosity_ = str2num(getenv('VERBOSITY')); %#ok<ST2NM>
-            if (isempty(this.verbosity_))
-                this.verbosity_ = str2num(getenv('VERBOSE')); end %#ok<ST2NM>
-            fprintf('mlbayesian.MCMC.setVerbosity:\n');
-            fprintf('\tverbosity level is %g;\n', this.verbosity);
-            fprintf('\tadjust by setting ENV variable VERBOSITY to [0 1] or VERBOSE to true/false.\n');
-        end
         function              printBeta(this, b, beta, lp0)
             if ( this.verbosity < 0.3); return; end
             if (~this.showBeta); return; end
@@ -489,7 +478,7 @@ classdef MCMC < mlbayesian.IMCMC
                     end
                 end
                 if (this.paramsSigmas(k) > (this.parameters.max(k) - this.parameters.min(k)))
-                    warning('mlbayesian:parameterOutOfBounds', 'MCMC.paramsSigmas(%i) too large\n', k);
+                    warning('mlbayesian:parameterOutOfBounds', 'McmcCellular.paramsSigmas(%i) too large\n', k);
                     this.paramsSigmas(k) =  this.parameters.max(k) - this.parameters.min(k);
                 end           
             end  

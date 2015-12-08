@@ -47,7 +47,7 @@ classdef (Abstract) AbstractBayesianProblem < mlbayesian.IBayesianProblem
             
             metric = abs(t - t0);
             [~,idx] = min(metric(:));
-            idx = floor(idx) + 1;
+            %idx = floor(idx) + 1;
         end
     end
     
@@ -61,7 +61,7 @@ classdef (Abstract) AbstractBayesianProblem < mlbayesian.IBayesianProblem
             addOptional(p,   'depData', [], @isnumeric);
             parse(p, varargin{:});            
  			
-            this.independentData = this.offsetZeros(p.Results.indepData);
+            this.independentData = p.Results.indepData;
             this.dependentData   = p.Results.depData;
             assert(all(size(this.independentData) == size(this.dependentData)));
         end 

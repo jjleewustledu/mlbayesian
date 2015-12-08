@@ -10,36 +10,36 @@ classdef IMCMC
  	%  $Id$ 
     
 	properties (Abstract)
-        nProposals % number of loops in parameter prob phase
-        nPop       % number of population
-        nPopRep    % number of population to replace
-        nBeta      % number of temperature steps
-        nAnneal    % number of loops per annealing temp
-
-        dependentData
-        paramsData
         paramsBetas
         paramsPopulations  
         paramsSigmas
+        paramsHist 
         annealingAvpar
         annealingSdpar
         annealingInitz
         bestFitParams
+        meanParams
+        stdParams
+        stdOfError
         
+        lpQC
         lpBetas
         lpPopulations
         lpFinal
         
-        paramsHist   
-        logProbQC   
-        stdOfError
-        
+        parameters        
         nParams
+        nProposals % number of loops in parameter prob phase
+        nPop       % number of population        
+        nPopRep    % number of population to replace
+        nBeta      % number of temperature steps
+        nAnneal    % number of loops per annealing temp
         nSamples
         nProposalsQC
         showAnnealing
         showBeta
         showPlots
+        verbosity
     end
 
 	methods (Abstract)
