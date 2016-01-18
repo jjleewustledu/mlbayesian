@@ -9,8 +9,8 @@ classdef AbstractMcmcStrategy < mlbayesian.AbstractBayesianStrategy & mlbayesian
  	%% It was developed on Matlab 8.5.0.197613 (R2015a) for MACI64.
  	
     properties  
-        showAnnealing = true
-        showBeta      = true
+        showAnnealing = false
+        showBeta      = false
         showPlots     = false
     end
     
