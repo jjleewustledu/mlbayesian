@@ -8,6 +8,10 @@ classdef AbstractMcmcStrategy < mlbayesian.AbstractBayesianStrategy & mlbayesian
  	%  and checked into repository /Users/jjlee/Local/src/mlcvl/mlbayesian/src/+mlbayesian.
  	%% It was developed on Matlab 8.5.0.197613 (R2015a) for MACI64.
  	
+    properties (Abstract)
+        mapParams
+    end
+    
     properties  
         showAnnealing = false
         showBeta      = false
@@ -114,7 +118,39 @@ classdef AbstractMcmcStrategy < mlbayesian.AbstractBayesianStrategy & mlbayesian
  			%  Usage:  this = AbstractMcmcStrategy() 
 
  			this = this@mlbayesian.AbstractBayesianStrategy(varargin{:}); 
- 		end 
+        end 
+        
+        function ps   = adjustParams(~, ps)
+            %% ADJUSTPARAMS:  override as needed for parameter constraints
+        end
+        function        disp(this)
+            builtin('disp', this);
+            fprintf('  with mapParams:\n\n');
+            this.dispMapParams;
+        end
+        function        dispMapParams(this)
+            keys = this.mapParams.keys;
+            vals = this.mapParams.values;
+            lenKeys = max(cellfun(@(x) length(x), keys));
+            s = '';
+            for p = 1:this.mapParams.Count
+                s = [s sprintf('    %*s: %s\n', lenKeys, keys{p}, struct2str(vals{p}, 'Punctuation', false))];
+            end
+            disp(s);
+        end
+        function        ensureKeyOrdering(this, currentKeys)
+            storedKeys = this.theParameters.paramsMap.keys;
+            for k = 1:length(storedKeys)
+                assert(strcmp(storedKeys{k}, currentKeys{k}), ...
+                       sprintf('AbstractMcmcStrategy.ensureKeyOrdering:  expected %s but received %s', ...
+                       storedKeys{k}, currentKeys{k}));
+            end
+        end
+        function ed   = estimateData(this)
+            keys        = this.theParameters.paramsMap.keys;
+            finalParams = cellfun(@(x) this.finalParams(x), keys);
+            ed          = this.estimateDataFast(finalParams{:});
+        end
         function x    = finalParams(this, key)
             x = this.bestFitParams(this.theParameters.paramsIndices(key));
         end   
@@ -124,15 +160,38 @@ classdef AbstractMcmcStrategy < mlbayesian.AbstractBayesianStrategy & mlbayesian
         function x    = finalStds(this, key)
             x = this.stdParams(this.theParameters.paramsIndices(key));
         end      
-        function        ensureKeyOrdering(this, currentKeys)
-            storedKeys = this.theParameters.paramsMap.keys;
-            for k = 1:length(storedKeys)
-                assert(strcmp(storedKeys{k}, currentKeys{k}), ...
-                       sprintf('AbstractMcmcStrategy.ensureKeyOrdering:  expected %s but received %s', ...
-                       storedKeys{k}, currentKeys{k}));
-            end
+        function        histParametersDistributions(this) 
+            this.theSolver.histParametersDistributions;
         end
-        
+        function        histStdOfError(this) 
+            this.theSolver.histStdOfError;
+        end
+        function nq   = normalizedQ(this)
+            aucs = 0;
+            for iidx = 1:length(this.dependentData)
+                aucs = aucs + sum(abs(this.dependentData{iidx}).^2);
+            end
+            nq = this.Q/aucs;
+        end
+        function        plotAnnealing(this) 
+            this.theSolver.plotAnnealing;
+        end
+        function        plotLogProbabilityQC(this) 
+            this.theSolver.plotLogProbabilityQC;
+        end
+        function        printBestFit(this)
+            this.theSolver.printBestFit;
+        end
+        function        printFinalStats(this)
+            this.theSolver.printFinalStats;
+        end
+        function        printQNQ(this)
+            fprintf('FINAL STATS Q               %g\n', this.Q);
+            fprintf('FINAL STATS Q normalized    %g\n', this.normalizedQ);
+        end
+        function q    = Q(this)
+            q = this.sumSquaredErrors(this.bestFitParams);
+        end        
         function this = runMcmc(this, paramsMap, paramsKeys)
             %% RUNMCMC should be run from within method estimateParameters, implemented as below
             %  Usage:  map = containers.Map
@@ -154,11 +213,6 @@ classdef AbstractMcmcStrategy < mlbayesian.AbstractBayesianStrategy & mlbayesian
                 this.(paramsKeys{k}) = this.finalParams(paramsKeys{k});
             end
         end
-        function ed   = estimateData(this)
-            keys        = this.theParameters.paramsMap.keys;
-            finalParams = cellfun(@(x) this.finalParams(x), keys);
-            ed          = this.estimateDataFast(finalParams{:});
-        end
         function sse  = sumSquaredErrors(this, p)
             p   = num2cell(p);
             sse = 0;
@@ -167,41 +221,6 @@ classdef AbstractMcmcStrategy < mlbayesian.AbstractBayesianStrategy & mlbayesian
                 sse = sse + ...
                       sum(abs(this.dependentData{iidx} - edf{iidx}).^2) ./ sum(abs(this.dependentData{iidx}).^2);
             end
-        end
-        function ps   = adjustParams(~, ps)
-            %% ADJUSTPARAMS:  override as needed for parameter constraints
-        end
-        function q    = Q(this)
-            q = this.sumSquaredErrors(this.bestFitParams);
-        end
-        function nq   = normalizedQ(this)
-            aucs = 0;
-            for iidx = 1:length(this.dependentData)
-                aucs = aucs + sum(abs(this.dependentData{iidx}).^2);
-            end
-            nq = this.Q/aucs;
-        end
-        function        printQNQ(this)
-            fprintf('FINAL STATS Q               %g\n', this.Q);
-            fprintf('FINAL STATS Q normalized    %g\n', this.normalizedQ);
-        end
-        function        printBestFit(this)
-            this.theSolver.printBestFit;
-        end
-        function        printFinalStats(this)
-            this.theSolver.printFinalStats;
-        end
-        function        histParametersDistributions(this) 
-            this.theSolver.histParametersDistributions;
-        end
-        function        histStdOfError(this) 
-            this.theSolver.histStdOfError;
-        end
-        function        plotAnnealing(this) 
-            this.theSolver.plotAnnealing;
-        end
-        function        plotLogProbabilityQC(this) 
-            this.theSolver.plotLogProbabilityQC;
         end
  	end 
 
