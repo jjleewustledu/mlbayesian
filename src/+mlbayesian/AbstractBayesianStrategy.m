@@ -8,23 +8,29 @@ classdef (Abstract) AbstractBayesianStrategy < mlbayesian.IBayesianStrategy
  	%  and checked into repository /Users/jjlee/Local/src/mlcvl/mlbayesian/src/+mlbayesian.
  	%% It was developed on Matlab 8.5.0.197613 (R2015a) for MACI64.
  	
-    properties         
-        independentData % cells, e.g., times
-        dependentData   % cells, e.g., densities = f(time)
-        theParameters
-        theSolver
-    end
     
     properties (Dependent)
+        dependentData   % cells, e.g., densities = f(time)
         expectedBestFitParams
         bestFitParams
+        independentData % cells, e.g., times
         meanParams
         stdParams
         stdOfError
+        theParameters
+        theSolver
         verbosity
     end
     
-    methods %% GET
+    methods %% GET/SET
+        function g = get.dependentData(this)
+            assert(~isempty(this.dependentData_));
+            g = this.dependentData_;
+        end
+        function this = set.dependentData(this, s)
+            assert(iscell(s));
+            this.dependentData_ = s;
+        end
         function e = get.expectedBestFitParams(this)
             assert(~isempty(this.expectedBestFitParams_), ...
                    'mlbayesian:attemptToAccessUnassignedVar', ...
@@ -34,6 +40,14 @@ classdef (Abstract) AbstractBayesianStrategy < mlbayesian.IBayesianStrategy
         function p = get.bestFitParams(this)
             assert(~isempty(this.theSolver));
             p = this.theSolver.bestFitParams;
+        end
+        function g = get.independentData(this)
+            assert(~isempty(this.independentData_));
+            g = this.independentData_;
+        end
+        function this = set.independentData(this, s)
+            assert(iscell(s));
+            this.independentData_ = s;
         end
         function p = get.meanParams(this)
             assert(~isempty(this.theSolver));
@@ -47,6 +61,22 @@ classdef (Abstract) AbstractBayesianStrategy < mlbayesian.IBayesianStrategy
             assert(~isempty(this.theSolver));
             p = this.theSolver.stdOfError;
         end
+        function g = get.theParameters(this)
+            assert(~isempty(this.theParameters_));
+            g = this.theParameters_;
+        end
+        function this = set.theParameters(this, s)
+            assert(isa(s, 'mlbayesian.IMcmcParameters'));
+            this.theParameters_ = s;
+        end
+        function g = get.theSolver(this)
+            assert(~isempty(this.theSolver_));
+            g = this.theSolver_;
+        end
+        function this = set.theSolver(this, s)
+            assert(isa(s, 'mlbayesian.IMCMC'));
+            this.theSolver_ = s;
+        end
         function v = get.verbosity(this)
             v = this.verbosity_;
         end
@@ -58,8 +88,8 @@ classdef (Abstract) AbstractBayesianStrategy < mlbayesian.IBayesianStrategy
  			%  Usage:  this = AbstractBayesianStrategy([independent_data, dependent_data])
             
             p = inputParser;
-            addOptional(p, 'indepData', [], @iscell); 
-            addOptional(p,   'depData', [], @iscell);
+            addOptional(p, 'indepData', {[]}, @iscell); 
+            addOptional(p,   'depData', {[]}, @iscell);
             parse(p, varargin{:});            
  			
             this.independentData = p.Results.indepData;
@@ -82,20 +112,33 @@ classdef (Abstract) AbstractBayesianStrategy < mlbayesian.IBayesianStrategy
                 T = true;
                 return
             end
-            T = false;
+            T = false; 
         end
-        function tf   = uniformSampling(t)
-            t   = mlsystem.VectorTools.ensureRowVector(t);
-            dts = t(2:end) - t(1:end-1);
-            dt1 = t(2) - t(1);
-            tf  = all(abs(dt1*ones(1,length(dts)) - dts) < eps('single'));
+        function [t,interp1,interp2] = interpolateAll(t1, conc1, t2, conc2)
+            %% INTERPOLATEALL interpolates variably sampled {t1 conc1} and {t2 conc2} to {t interp1} and {t interp2}
+            %  so that t satisfies Nyquist sampling
+            
+            dt = min([timeDifferences(t1) timeDifferences(t2)]) / 2;
+            tInf = min([t1 t2]);
+            tSup = max([t1 t2]);
+            
+            t  = tInf:dt:tSup;
+            interp1 = pchip(t1,conc1,t);
+            interp2 = pchip(t2,conc2,t);
+
+            function timeDiffs = timeDifferences(times)
+                timeDiffs = times(2:end) - times(1:end-1);
+            end
         end
         function conc = slide(conc, t, Dt)
-            %% SLIDE works for inhomogeneous t according to the ability of pchip to interpolate
+            %% SLIDE slides discretized function conc(t) to conc(t - Dt);
+            %  Dt > 0 will slide conc(t) towards lower values of t.
+            %  It works for inhomogeneous t according to the ability of pchip to interpolate.
+            %  It may not preserve information according to the Nyquist-Shannon theorem.  
             
             import mlbayesian.AbstractBayesianStrategy.*;
             [conc,trans] = ensureRow(conc);
-            t          = ensureRow(t);
+            t            = ensureRow(t);
             
             tspan = t(end) - t(1);
             tinc  = t(2) - t(1);
@@ -107,12 +150,22 @@ classdef (Abstract) AbstractBayesianStrategy < mlbayesian.IBayesianStrategy
                 conc = conc';
             end
         end
+        function tf   = uniformSampling(t)
+            t   = mlsystem.VectorTools.ensureRowVector(t);
+            dts = t(2:end) - t(1:end-1);
+            dt1 = t(2) - t(1);
+            tf  = all(abs(dt1*ones(1,length(dts)) - dts) < eps('single'));
+        end
     end    
     
     %% PROTECTED
     
     properties (Access = 'protected')
+        dependentData_
         expectedBestFitParams_
+        independentData_
+        theParameters_
+        theSolver_
         verbosity_
     end
     

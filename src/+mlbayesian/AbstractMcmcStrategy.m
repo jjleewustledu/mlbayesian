@@ -192,25 +192,31 @@ classdef AbstractMcmcStrategy < mlbayesian.AbstractBayesianStrategy & mlbayesian
         function q    = Q(this)
             q = this.sumSquaredErrors(this.bestFitParams);
         end        
-        function this = runMcmc(this, paramsMap, paramsKeys)
-            %% RUNMCMC should be run from within method estimateParameters, implemented as below
+        function this = runMcmc(this, varargin)
+            %% RUNMCMC should be run from within method estimateParameters, implemented as described below.
+            %  @params paramsMap is a containers.Map with parameter keys & values
+            %  @params paramsKeys is a cell array enumerating param keys to be checked for equivalence with
+            %  paramsMap.keys
             %  Usage:  map = containers.Map
             %          map('some_param') = struct('fixed', 0, 'min', eps, 'mean', 1, 'max',  10)
             %          this = this.runMcmc(map)
             
             ip = inputParser;
-            addRequired(ip, 'paramsMap',  @(x) isa(x, 'containers.Map'));
-            addRequired(ip, 'paramsKeys', @iscell);
-            parse(ip, paramsMap, paramsKeys);
+            addRequired( ip, 'paramsMap',        @(x) isa(x, 'containers.Map'));
+            addParameter(ip, 'keysToVerify', {}, @iscell);
+            parse(ip, varargin{:});
             
             import mlbayesian.*;
-            this.theParameters   = McmcParameters(paramsMap, numel(cell2mat(this.independentData)));    
-            this.ensureKeyOrdering(paramsKeys);
+            this.theParameters   = McmcParameters(ip.Results.paramsMap, numel(cell2mat(this.independentData)));    
+            if (~isempty(ip.Results.keysToVerify))
+                this.ensureKeyOrdering(ip.Results.keysToVerify);
+            end
             this.theSolver       = McmcCellular(this);
             [~,~,this.theSolver] = this.theSolver.runMcmc;     
-            this.printQNQ;       
-            for k = 1:length(paramsKeys)
-                this.(paramsKeys{k}) = this.finalParams(paramsKeys{k});
+            this.printQNQ;
+            keys = ip.Results.paramsMap.keys;
+            for k = 1:length(keys)
+                this.(keys{k}) = this.finalParams(keys{k});
             end
         end
         function sse  = sumSquaredErrors(this, p)
