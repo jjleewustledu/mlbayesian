@@ -15,7 +15,6 @@ classdef (Abstract) IMcmcProblem
         xLabel
         yLabel        
         
-        length % of dependent_data = f(time_interpolants), which must have the same array sizes
         dt
         times            % synonym of independentData
         timeInterpolants % synonym of independentData        
@@ -39,6 +38,7 @@ classdef (Abstract) IMcmcProblem
 
 	methods (Abstract) 
         runMcmc(this)
+        length(this) % of dependent_data = f(time_interpolants), which must have the same array sizes
         logProbability(this, paramsVec, beta, logProbabilityFlag) %  lPFlag: -1  return Q
                                                                   %           0  return log of normalized Q
                                                                   %           1  return with beta and priors

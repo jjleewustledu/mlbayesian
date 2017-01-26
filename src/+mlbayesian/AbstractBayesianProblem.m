@@ -11,7 +11,7 @@ classdef (Abstract) AbstractBayesianProblem < mlbayesian.IBayesianProblem
  	%  developed on Matlab 8.3.0.532 (R2014a) 
  	%  $Id$ 
     
-    properties         
+    properties
         independentData % numeric, e.g., times
         dependentData   % numeric, e.g., densities = f(time)
         paramsManager   % mlbayesian.IBayesianParameters
@@ -91,7 +91,7 @@ classdef (Abstract) AbstractBayesianProblem < mlbayesian.IBayesianProblem
         function x    = finalStds(this, key)
             x = this.stdParams(this.paramsManager.paramsIndices(key));
         end      
-        function ensureKeyOrdering(this, currentKeys)
+        function        ensureKeyOrdering(this, currentKeys)
             storedKeys = this.paramsManager.paramsMap.keys;
             for k = 1:length(storedKeys)
                 assert(strcmp(storedKeys{k}, currentKeys{k}), ...
@@ -108,12 +108,12 @@ classdef (Abstract) AbstractBayesianProblem < mlbayesian.IBayesianProblem
     end
     
     methods (Access = 'protected')
-        function x = ditherZeros(~, x)
+        function x  = ditherZeros(~, x)
             if (any(0 == x))
                 x = x + (rand(1) + 1) * eps;
             end
         end
-        function x = offsetZeros(~, x)            
+        function x  = offsetZeros(~, x)
             if (any(0 == x))
                 x = x + eps;
             end

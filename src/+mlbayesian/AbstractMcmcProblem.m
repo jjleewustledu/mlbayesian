@@ -12,14 +12,13 @@ classdef (Abstract) AbstractMcmcProblem < mlbayesian.AbstractBayesianProblem & m
  	%  developed on Matlab 8.4.0.150421 (R2014b) 
  	%  $Id$ 
  	 
-    properties    
+    properties 
         showAnnealing = true
         showBeta      = true
         showPlots     = false
     end
     
     properties (Dependent)
-        length % of dependent_data = f(time_interpolants), which must have the same array sizes
         dt
         times
         timeInterpolants
@@ -38,9 +37,6 @@ classdef (Abstract) AbstractMcmcProblem < mlbayesian.AbstractBayesianProblem & m
     end
     
     methods %% GET
-        function le = get.length(this)
-            le = length(this.independentData);
-        end
         function t  = get.dt(this)
             t = (this.timeFinal - this.timeInitial)/(this.length - 1);
         end
@@ -82,7 +78,7 @@ classdef (Abstract) AbstractMcmcProblem < mlbayesian.AbstractBayesianProblem & m
         end
     end
 
-	methods 		  
+	methods 
  		function this = AbstractMcmcProblem(varargin) 
  			%% ABSTRACTMCMCPROBLEM 
  			%  Usage:  this = AbstractMcmcProblem() 
@@ -114,7 +110,7 @@ classdef (Abstract) AbstractMcmcProblem < mlbayesian.AbstractBayesianProblem & m
         function        printFinalStats(this)
             this.mcmc.printFinalStats;
         end
-        function        histParametersDistributions(this) 
+        function        histParametersDistributions(this)
             this.mcmc.histParametersDistributions;
         end
         function        histStdOfError(this) 
@@ -140,6 +136,11 @@ classdef (Abstract) AbstractMcmcProblem < mlbayesian.AbstractBayesianProblem & m
             title(sprintf('%s and Bayesian estimate', this.baseTitle));
             xlabel(this.xLabel)
             ylabel(this.yLabel)
+        end        
+        function len  = length(this)
+            %% LENGTH of dependent_data = f(time_interpolants), which must have the same array sizes
+            
+            len = length(this.independentData);
         end
  	end 
 
