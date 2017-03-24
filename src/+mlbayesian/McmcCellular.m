@@ -7,7 +7,8 @@ classdef McmcCellular < mlbayesian.IMCMC
  	%  by jjlee,
  	%  last modified $LastChangedDate$
  	%  and checked into repository /Users/jjlee/Local/src/mlcvl/mlbayesian/src/+mlbayesian.
- 	%% It was developed on Matlab 8.5.0.197613 (R2015a) for MACI64.
+ 	%  It was developed on Matlab 8.5.0.197613 (R2015a) for MACI64.  
+    %% Copyright 2015 G. Larry Bretthorst, Joshua S. Shimony, John J. Lee.
 
     properties (Constant)
         NBINS       = 50   % nbins for hist
@@ -17,7 +18,7 @@ classdef McmcCellular < mlbayesian.IMCMC
         FRAC_POPREP = 0.1
     end
     
-    properties 
+    properties
         paramsBetas   
         paramsPopulations   
         paramsSigmas   
@@ -94,7 +95,7 @@ classdef McmcCellular < mlbayesian.IMCMC
         end
     end
     
-	methods        
+	methods
         function this                = McmcCellular(mcmcStrat)
             
             p = inputParser;

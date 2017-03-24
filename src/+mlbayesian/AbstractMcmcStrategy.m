@@ -6,7 +6,7 @@ classdef AbstractMcmcStrategy < mlbayesian.AbstractBayesianStrategy & mlbayesian
  	%  by jjlee,
  	%  last modified $LastChangedDate$
  	%  and checked into repository /Users/jjlee/Local/src/mlcvl/mlbayesian/src/+mlbayesian.
- 	%% It was developed on Matlab 8.5.0.197613 (R2015a) for MACI64.
+ 	%% It was developed on Matlab 8.5.0.197613 (R2015a) for MACI64.  Copyright 2017 John Joowon Lee.
  	
     properties (Abstract)
         mapParams
@@ -112,7 +112,7 @@ classdef AbstractMcmcStrategy < mlbayesian.AbstractBayesianStrategy & mlbayesian
         end
     end
 
-	methods 		  
+	methods
  		function this = AbstractMcmcStrategy(varargin) 
  			%% ABSTRACTMCMCSTRATEGY 
  			%  Usage:  this = AbstractMcmcStrategy() 
@@ -215,15 +215,18 @@ classdef AbstractMcmcStrategy < mlbayesian.AbstractBayesianStrategy & mlbayesian
             [~,~,this.theSolver] = this.theSolver.runMcmc;     
             this.printQNQ;
             keys = ip.Results.paramsMap.keys;
-            for k = 1:length(keys)
+            for k = 1:length(keys) %#ok<CPROPLC>
                 this.(keys{k}) = this.finalParams(keys{k});
             end
         end
         function sse  = sumSquaredErrors(this, p)
+            %% SUMSQUAREDERRORS returns the sum-of-squared-errors summed over the cells of this.dependentData and 
+            %  corresponding this.estiamteDataFast. 
+            
             p   = num2cell(p);
             sse = 0;
-            for iidx = 1:length(this.dependentData)
-                edf = this.estimateDataFast(p{:});
+            edf = this.estimateDataFast(p{:});
+            for iidx = 1:length(this.dependentData) %#ok<CPROPLC>
                 sse = sse + ...
                       sum(abs(this.dependentData{iidx} - edf{iidx}).^2) ./ sum(abs(this.dependentData{iidx}).^2);
             end

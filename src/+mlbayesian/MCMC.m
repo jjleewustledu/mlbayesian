@@ -7,8 +7,9 @@ classdef MCMC < mlbayesian.IMCMC
  	%  by $Author$,  
  	%  last modified $LastChangedDate$ 
  	%  and checked into repository $URL$,  
- 	%  developed on Matlab 8.3.0.532 (R2014a) 
+ 	%  developed on Matlab 8.3.0.532 (R2014a).  
  	%  $Id$ 
+    %% Copyright 2014 Larry Bretthorst, Joshua S. Shimony, John J. Lee. 
 
     properties (Constant)
         NBINS    = 50   % nbins for hist

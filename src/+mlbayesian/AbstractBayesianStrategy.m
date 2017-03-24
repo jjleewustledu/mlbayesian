@@ -6,7 +6,7 @@ classdef (Abstract) AbstractBayesianStrategy < mlbayesian.IBayesianStrategy
  	%  by jjlee,
  	%  last modified $LastChangedDate$
  	%  and checked into repository /Users/jjlee/Local/src/mlcvl/mlbayesian/src/+mlbayesian.
- 	%% It was developed on Matlab 8.5.0.197613 (R2015a) for MACI64.
+ 	%% It was developed on Matlab 8.5.0.197613 (R2015a) for MACI64.  Copyright 2015-2017 John Joowon Lee.
  	
     
     properties (Dependent)
@@ -106,6 +106,20 @@ classdef (Abstract) AbstractBayesianStrategy < mlbayesian.IBayesianStrategy
             h = zeros(size(t));
             h = h + double(t > t0);
         end
+        function appendState(fname, state)
+            if (~lstrfind(fname, '.mat'))
+                fname = [fname '.mat'];
+            end
+            state1 = state;
+            fields1 = fieldnames(state1);
+            load(fname, 'state');
+            for f = 1:length(fields1)
+                if (~isfield(state, fields1{f}))
+                    state.(fields1{f}) = state1.(fields1{f});
+                end
+            end
+            save(fname, 'state');
+        end
         function [vec,T] = ensureRow(vec)
             if (~isrow(vec))
                 vec = vec';
@@ -130,9 +144,19 @@ classdef (Abstract) AbstractBayesianStrategy < mlbayesian.IBayesianStrategy
                 timeDiffs = times(2:end) - times(1:end-1);
             end
         end
+        function saveState(fname, state)
+            if (isempty(fname) || isempty(state))
+                return
+            end
+            if (~lstrfind(fname, '.mat'))
+                fname = [fname '.mat'];
+            end
+            save(fname, 'state');
+        end
         function conc = slide(conc, t, Dt)
             %% SLIDE slides discretized function conc(t) to conc(t - Dt);
-            %  Dt > 0 will slide conc(t) towards lower values of t.
+            %  Dt > 0 will slide conc(t) towards later times t.
+            %  Dt < 0 will slide conc(t) towards earlier times t.
             %  It works for inhomogeneous t according to the ability of pchip to interpolate.
             %  It may not preserve information according to the Nyquist-Shannon theorem.  
             

@@ -6,7 +6,7 @@ classdef IMCMC
  	%  by $Author$,  
  	%  last modified $LastChangedDate$ 
  	%  and checked into repository $URL$,  
- 	%  developed on Matlab 8.3.0.532 (R2014a) 
+ 	%  developed on Matlab 8.3.0.532 (R2014a).  Copyright 2014 Joshua S. Shimony, John J. Lee.
  	%  $Id$ 
     
 	properties (Abstract)
