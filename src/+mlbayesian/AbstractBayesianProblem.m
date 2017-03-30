@@ -14,8 +14,9 @@ classdef (Abstract) AbstractBayesianProblem < mlbayesian.IBayesianProblem
     properties
         independentData % numeric, e.g., times
         dependentData   % numeric, e.g., densities = f(time)
+        sessionData     % mlpipeline.ISessionData
         paramsManager   % mlbayesian.IBayesianParameters
-        mcmc            % mlbayesian.IMCMC
+        mcmc            % mlbayesian.IMCMC        
     end
     
     properties (Dependent)

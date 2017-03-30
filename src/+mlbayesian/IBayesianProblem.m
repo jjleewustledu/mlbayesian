@@ -7,12 +7,12 @@ classdef (Abstract) IBayesianProblem
  	%  last modified $LastChangedDate$ 
  	%  and checked into repository $URL$,  
  	%  developed on Matlab 8.3.0.532 (R2014a).  Copyright 2014 John Joowon Lee. 
- 	%  $Id$ 
- 	 
+ 	%% $Id$  	 
 
 	properties (Abstract) 
         independentData % numeric, e.g., times
         dependentData   % numeric, e.g., densities = f(time)
+        sessionData     % mlpipeline.ISessionData
         paramsManager   % mlbayesian.IBayesianParameters
         mcmc            % mlbayesian.IMCMC
         bestFitParams   % numeric 

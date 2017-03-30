@@ -6,8 +6,8 @@ classdef (Abstract) IMcmcProblem
  	%  by $Author$,  
  	%  last modified $LastChangedDate$ 
  	%  and checked into repository $URL$,  
- 	%  developed on Matlab 8.4.0.150421 (R2014b) 
- 	%  $Id$ 
+ 	%  developed on Matlab 8.4.0.150421 (R2014b).  Copyright 2014 John Joowon Lee. 
+ 	%% $Id$ 
  	 
 
 	properties (Abstract) 

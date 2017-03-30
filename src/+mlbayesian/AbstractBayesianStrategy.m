@@ -1,4 +1,4 @@
-classdef (Abstract) AbstractBayesianStrategy < mlbayesian.IBayesianStrategy
+classdef (Abstract) AbstractBayesianStrategy < mlio.AbstractIO & mlbayesian.IBayesianStrategy
 	%% ABSTRACTBAYESIANSTRATEGY  
 
 	%  $Revision$
@@ -10,11 +10,12 @@ classdef (Abstract) AbstractBayesianStrategy < mlbayesian.IBayesianStrategy
  	
     
     properties (Dependent)
+        bestFitParams
         dependentData   % cells, e.g., densities = f(time)
         expectedBestFitParams
-        bestFitParams
         independentData % cells, e.g., times
         meanParams
+        sessionData
         stdParams
         stdOfError
         theParameters
@@ -23,6 +24,10 @@ classdef (Abstract) AbstractBayesianStrategy < mlbayesian.IBayesianStrategy
     end
     
     methods %% GET/SET
+        function p = get.bestFitParams(this)
+            assert(~isempty(this.theSolver));
+            p = this.theSolver.bestFitParams;
+        end
         function g = get.dependentData(this)
             assert(~isempty(this.dependentData_));
             g = this.dependentData_;
@@ -37,10 +42,6 @@ classdef (Abstract) AbstractBayesianStrategy < mlbayesian.IBayesianStrategy
                    'concrete implementation of AbstractBayesianStrategy must assign this.expectedBestFitParams_');
             e = this.expectedBestFitParams_;
         end
-        function p = get.bestFitParams(this)
-            assert(~isempty(this.theSolver));
-            p = this.theSolver.bestFitParams;
-        end
         function g = get.independentData(this)
             assert(~isempty(this.independentData_));
             g = this.independentData_;
@@ -52,6 +53,13 @@ classdef (Abstract) AbstractBayesianStrategy < mlbayesian.IBayesianStrategy
         function p = get.meanParams(this)
             assert(~isempty(this.theSolver));
             p = this.theSolver.meanParams;
+        end
+        function g = get.sessionData(this)
+            g = this.sessionData_;
+        end
+        function this = set.sessionData(this, s)
+            assert(isa(s, 'mlpipeline.ISessionData'));
+            this.sessionData_ = s;
         end
         function p = get.stdParams(this)
             assert(~isempty(this.theSolver));
@@ -70,7 +78,6 @@ classdef (Abstract) AbstractBayesianStrategy < mlbayesian.IBayesianStrategy
             this.theParameters_ = s;
         end
         function g = get.theSolver(this)
-            assert(~isempty(this.theSolver_));
             g = this.theSolver_;
         end
         function this = set.theSolver(this, s)
@@ -82,6 +89,11 @@ classdef (Abstract) AbstractBayesianStrategy < mlbayesian.IBayesianStrategy
         end
     end
     
+    methods (Static)
+        function this = load(fn) %#ok<STOUT>
+            load(fn, 'this');
+        end
+    end
 	methods 
  		function this = AbstractBayesianStrategy(varargin)
  			%% ABSTRACTBAYESIANSTRATEGY
@@ -97,8 +109,13 @@ classdef (Abstract) AbstractBayesianStrategy < mlbayesian.IBayesianStrategy
             for didx = 1:length(this.dependentData)
                 assert(all(size(this.independentData{didx}) == size(this.dependentData{didx})));
             end
-            this = this.setVerbosityCache;
+            this = this.setVerbosityCache;            
+            this.fileprefix = sprintf(strrep(class(this), '.', '_'));
+            this.filesuffix = '.mat';
         end 
+        function save(this)            
+            save(this.fqfilename, 'this');
+        end
     end
     
     methods (Static)
@@ -160,9 +177,9 @@ classdef (Abstract) AbstractBayesianStrategy < mlbayesian.IBayesianStrategy
             %  It works for inhomogeneous t according to the ability of pchip to interpolate.
             %  It may not preserve information according to the Nyquist-Shannon theorem.  
             
-            import mlbayesian.AbstractBayesianStrategy.*;
-            [conc,trans] = ensureRow(conc);
-            t            = ensureRow(t);
+            import mlbayesian.*;
+            [conc,trans] = AbstractBayesianStrategy.ensureRow(conc);
+            t            = AbstractBayesianStrategy.ensureRow(t);
             
             tspan = t(end) - t(1);
             tinc  = t(2) - t(1);
@@ -173,6 +190,23 @@ classdef (Abstract) AbstractBayesianStrategy < mlbayesian.IBayesianStrategy
             if (trans)
                 conc = conc';
             end
+        end
+        function A    = pchip(t, A, t_, Dt)
+            %% PCHIP slides discretized function A(t) to A(t_ - Dt);
+            %  Dt > 0 will slide conc(t) towards to later values of t.
+            %  Dt < 0 will slide conc(t) towards to earlier values of t.
+            %  It works for inhomogeneous t according to the ability of pchip to interpolate.
+            %  It may not preserve information according to the Nyquist-Shannon theorem.  
+            %  @param t  is the initial t sampling
+            %  @param A  is the initial A sampling
+            %  @param t_ is the final   t sampling
+            %  @param Dt is the shift of t_
+            
+            tspan = t(end) - t(1);
+            dt    = t(2) - t(1);
+            t     = [(t - tspan - dt) t]; % prepend times
+            A     = [zeros(size(A)) A]; % prepend zeros
+            A     = pchip(t, A, t_ - Dt); % interpolate onto t shifted by Dt; Dt > 0 shifts conc to right
         end
         function tf   = uniformSampling(t)
             t   = mlsystem.VectorTools.ensureRowVector(t);
@@ -188,6 +222,7 @@ classdef (Abstract) AbstractBayesianStrategy < mlbayesian.IBayesianStrategy
         dependentData_
         expectedBestFitParams_
         independentData_
+        sessionData_
         theParameters_
         theSolver_
         verbosity_

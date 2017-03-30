@@ -13,14 +13,15 @@ classdef AbstractMcmcStrategy < mlbayesian.AbstractBayesianStrategy & mlbayesian
     end
     
     properties  
-        showAnnealing = false
-        showBeta      = false
-        showPlots     = false
+        showAnnealing  = true
+        showBeta       = true
+        showBestFit    = true
+        showFinalStats = true
+        showPlots      = true
     end
     
     properties (Dependent)
         dt
-        length           % of dependent_data and of indepdendent_data, both of which must have the same array sizes
         taus             % times(2) - times(1), times(3) - times(2), ...
         times            % synonym of independentData
         timeFinal        % independentData(end)
@@ -45,11 +46,6 @@ classdef AbstractMcmcStrategy < mlbayesian.AbstractBayesianStrategy & mlbayesian
         function t  = get.dt(this)            
             for iidx = 1:length(this.independentData)
                 t{iidx} = min(this.taus{iidx});
-            end
-        end
-        function le = get.length(this)
-            for iidx = 1:length(this.independentData)
-                le(iidx) = length(this.independentData);
             end
         end
         function t  = get.taus(this)            
@@ -165,6 +161,22 @@ classdef AbstractMcmcStrategy < mlbayesian.AbstractBayesianStrategy & mlbayesian
         end
         function        histStdOfError(this) 
             this.theSolver.histStdOfError;
+        end        
+        function len  = length(this)
+            %% LENGTH
+            %  @returns length of dependent_data and of indepdendent_data, both of which must have the same array sizes
+            
+            for iidx = 1:length(this.independentData)
+                len(iidx) = length(this.independentData); %#ok<AGROW>
+            end
+        end
+        function this = makeQuiet(this)
+            setenv('VERBOSITY', '0');
+            this.showAnnealing  = false;
+            this.showBeta       = false;
+            this.showBestFit    = false;
+            this.showFinalStats = false;
+            this.showPlots      = false;
         end
         function nq   = normalizedQ(this)
             aucs = 0;
@@ -172,6 +184,17 @@ classdef AbstractMcmcStrategy < mlbayesian.AbstractBayesianStrategy & mlbayesian
                 aucs = aucs + sum(abs(this.dependentData{iidx}).^2);
             end
             nq = this.Q/aucs;
+        end
+        function        plotAll(this)
+            if (~this.showAnnealing)
+                this.plotAnnealing;
+            end
+            if (~this.showPlots)
+                this.histParametersDistributions;
+                this.plotLogProbabilityQC;
+                this.histStdOfError;
+            end
+            this.plot;
         end
         function        plotAnnealing(this) 
             this.theSolver.plotAnnealing;
@@ -215,7 +238,7 @@ classdef AbstractMcmcStrategy < mlbayesian.AbstractBayesianStrategy & mlbayesian
             [~,~,this.theSolver] = this.theSolver.runMcmc;     
             this.printQNQ;
             keys = ip.Results.paramsMap.keys;
-            for k = 1:length(keys) %#ok<CPROPLC>
+            for k = 1:length(keys) 
                 this.(keys{k}) = this.finalParams(keys{k});
             end
         end
@@ -226,9 +249,12 @@ classdef AbstractMcmcStrategy < mlbayesian.AbstractBayesianStrategy & mlbayesian
             p   = num2cell(p);
             sse = 0;
             edf = this.estimateDataFast(p{:});
-            for iidx = 1:length(this.dependentData) %#ok<CPROPLC>
+            for iidx = 1:length(this.dependentData) 
                 sse = sse + ...
-                      sum(abs(this.dependentData{iidx} - edf{iidx}).^2) ./ sum(abs(this.dependentData{iidx}).^2);
+                      sum(abs(this.dependentData{iidx} - edf{iidx}).^2./abs(this.dependentData{iidx}));
+            end
+            if (sse < eps)
+                sse = sse + (1 + rand(1))*eps; 
             end
         end
  	end 

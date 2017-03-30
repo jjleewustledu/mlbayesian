@@ -6,7 +6,7 @@ classdef (Abstract) IBayesianStrategy
  	%  by jjlee,
  	%  last modified $LastChangedDate$
  	%  and checked into repository /Users/jjlee/Local/src/mlcvl/mlbayesian/src/+mlbayesian.
- 	%% It was developed on Matlab 8.5.0.197613 (R2015a) for MACI64.
+ 	%% It was developed on Matlab 8.5.0.197613 (R2015a) for MACI64.  Copyright 2015 John Joowon Lee. 
  	
     properties (Abstract)
         xLabel
@@ -16,6 +16,7 @@ classdef (Abstract) IBayesianStrategy
         
         independentData % cells, e.g., times
         dependentData   % cells, e.g., densities = f(time)
+        sessionData     % mlpipeline.ISessionData
         theParameters
         theSolver
         

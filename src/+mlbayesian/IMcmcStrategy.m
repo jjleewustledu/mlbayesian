@@ -6,7 +6,7 @@ classdef IMcmcStrategy
  	%  by jjlee,
  	%  last modified $LastChangedDate$
  	%  and checked into repository /Users/jjlee/Local/src/mlcvl/mlbayesian/src/+mlbayesian.
- 	%% It was developed on Matlab 8.5.0.197613 (R2015a) for MACI64.
+ 	%% It was developed on Matlab 8.5.0.197613 (R2015a) for MACI64.  Copyright 2015 John Joowon Lee. 
  	
 	properties (Abstract)
         showAnnealing
@@ -14,7 +14,6 @@ classdef IMcmcStrategy
         showPlots % boolean
         
         dt
-        length           % of dependent_data = f(time_interpolants), which must have the same array sizes
         taus             % times(2) - times(1), times(3) - times(2), ...
         times            % synonym of independentData
         timeFinal        % independentData(end)
@@ -36,23 +35,23 @@ classdef IMcmcStrategy
  	end 
 
 	methods (Abstract) 
-        finalParams(this)
-        finalMeans(this)
-        finalStds(this)
+        adjustParams(this) 
         ensureKeyOrdering(this)
-        
-        runMcmc(this)  
-        sumSquaredErrors(this, p)
-        adjustParams(this)
-        Q(this)
-        normalizedQ(this)
-        printQNQ(this)
-        printBestFit(this)
-        printFinalStats(this)
+        finalMeans(this)
+        finalParams(this)
+        finalStds(this)               
         histParametersDistributions(this)
         histStdOfError(this)
+        length(this) % of dependent_data = f(time_interpolants), which must have the same array sizes        
+        normalizedQ(this)
         plotAnnealing(this)
-        plotLogProbabilityQC(this)        
+        plotLogProbabilityQC(this) 
+        printBestFit(this)
+        printFinalStats(this)
+        printQNQ(this)
+        Q(this)  
+        runMcmc(this)  
+        sumSquaredErrors(this, p)     
     end
 
 	%  Created with Newcl by John J. Lee after newfcn by Frank Gonzalez-Morphy

@@ -49,6 +49,8 @@ classdef McmcCellular < mlbayesian.IMCMC
         nProposalsQC
         showAnnealing
         showBeta
+        showBestFit
+        showFinalStats
         showPlots
         verbosity
     end
@@ -86,6 +88,12 @@ classdef McmcCellular < mlbayesian.IMCMC
         end
         function tf = get.showBeta(this)
             tf = this.mcmcStrategy_.showBeta;
+        end
+        function tf = get.showBestFit(this)
+            tf = this.mcmcStrategy_.showBestFit;
+        end
+        function tf = get.showFinalStats(this)
+            tf = this.mcmcStrategy_.showFinalStats;
         end
         function tf = get.showPlots(this)
             tf = this.mcmcStrategy_.showPlots;
@@ -280,12 +288,12 @@ classdef McmcCellular < mlbayesian.IMCMC
             avpar  = this.annealingAvpar;
             this.lpFinal = lp1;
 
-            this = this.printBestFit;
-            this = this.printFinalStats; 
-            if (this.showPlots); this.histParametersDistributions; end
-            if (1 == this.verbosity)
-                if (this.showPlots); this.plotLogProbabilityQC; end
-                if (this.showPlots); this.histStdOfError; end
+            this = this.printBestFit; 
+            this = this.printFinalStats;
+            if (this.showPlots)
+                this.histParametersDistributions;
+                this.plotLogProbabilityQC;
+                this.histStdOfError;
             end
         end    
         function [lprob,paramsVec]   = logProbability(this, paramsVec, beta_, lpFlag)
@@ -304,7 +312,7 @@ classdef McmcCellular < mlbayesian.IMCMC
                 return
             end
 
-            % use t distribution, Jeffreys Prior
+            % use log t-distribution for parameter degrees of freedom
             lprob = -0.5*this.nSamples*log(0.5*lprob);
 
             % add in beta and pretest probabilities
@@ -317,8 +325,9 @@ classdef McmcCellular < mlbayesian.IMCMC
         end
 
         function this = printBestFit(this)
-            
             % print best fit member of population
+            
+            if (~this.showBestFit); return; end
             for k = 1:this.nParams
                 fprintf('BEST-FIT    param %3s value %f\n', this.paramIndexToLabel(k), this.bestFitParams(k));
             end
@@ -350,28 +359,12 @@ classdef McmcCellular < mlbayesian.IMCMC
             for k = 1:this.nParams
                 this.meanParams(k) = avpar(k);
                 this.stdParams(k)  = sdpar(k);
-                fprintf('FINAL STATS param %3s mean  %f\t std %f\n', this.paramIndexToLabel(k), avpar(k), sdpar(k));
+                if (this.showFinalStats)
+                    fprintf('FINAL STATS param %3s mean  %f\t std %f\n', this.paramIndexToLabel(k), avpar(k), sdpar(k));
+                end
             end
         end        
         
-        function histParametersDistributions(this)
-            
-            % histogram sampling phase
-            % histogram parameter distribution
-            figure;
-            N = ceil(sqrt(double(this.nParams)));
-            for k = 1:this.nParams
-                subplot(N, N, double(k));
-                hist(this.paramsHist(k,:), this.NBINS);
-                xlabel(['Parameter ', this.paramIndexToLabel(k)]);
-            end
-        end
-        function histStdOfError(this)
-            figure;
-            hist(this.stdOfError, this.NBINS);
-            title('histStdOfError');
-            xlabel('std. dev. of error');
-        end
         function plotAnnealing(this)
             
             figure;            
@@ -389,6 +382,18 @@ classdef McmcCellular < mlbayesian.IMCMC
             xlabel('beta (1/temp)');
             ylabel('log(prob)');
         end
+        function histParametersDistributions(this)
+            
+            % histogram sampling phase
+            % histogram parameter distribution
+            figure;
+            N = ceil(sqrt(double(this.nParams)));
+            for k = 1:this.nParams
+                subplot(N, N, double(k));
+                hist(this.paramsHist(k,:), this.NBINS);
+                xlabel(['Parameter ', this.paramIndexToLabel(k)]);
+            end
+        end
         function plotLogProbabilityQC(this)
             figure;
             hold on;
@@ -399,6 +404,12 @@ classdef McmcCellular < mlbayesian.IMCMC
             title('plotLogProbabilityQC');
             xlabel('proposal#');
             ylabel('log(prob)');
+        end
+        function histStdOfError(this)
+            figure;
+            hist(this.stdOfError, this.NBINS);
+            title('histStdOfError');
+            xlabel('std. dev. of error');
         end
     end
     
