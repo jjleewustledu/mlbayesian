@@ -516,9 +516,11 @@ classdef McmcCellular < mlbayesian.IMCMC
                 end
                 
                 %% assure that these are not repeated
+                if (isnan(ilpmin) || isnan(ilpmax))
+                    continue
+                end
                 this.lpPopulations(ilpmin) = 0.0;
                 this.lpPopulations(ilpmax) = 0.0;
-
                 this.paramsPopulations(:,ilpmin) = this.paramsPopulations(:,ilpmax);
             end
         end

@@ -13,6 +13,7 @@ classdef AbstractMcmcStrategy < mlbayesian.AbstractBayesianStrategy & mlbayesian
     end
     
     properties  
+        jeffreysPrior
         showAnnealing  = true
         showBeta       = true
         showBestFit    = true
@@ -43,20 +44,20 @@ classdef AbstractMcmcStrategy < mlbayesian.AbstractBayesianStrategy & mlbayesian
     end
     
     methods %% GET
-        function t  = get.dt(this)            
+        function t  = get.dt(this)
             for iidx = 1:length(this.independentData)
                 t{iidx} = min(this.taus{iidx});
             end
         end
-        function t  = get.taus(this)            
+        function t  = get.taus(this)
             for iidx = 1:length(this.independentData)
-                t{idx} = this.times{idx}(2:end) - this.times{idx}(1:end-1);
+                t{idx} = this.times{idx}(2:end) - this.times{idx}(1:end-1); %#ok<AGROW>
             end
         end
         function t  = get.times(this)
             t = this.independentData;
         end
-        function tf = get.timeFinal(this)            
+        function tf = get.timeFinal(this)
             for iidx = 1:length(this.independentData)
                 tf(iidx) = this.independentData{iidx}(end);
             end
@@ -90,7 +91,7 @@ classdef AbstractMcmcStrategy < mlbayesian.AbstractBayesianStrategy & mlbayesian
         function n  = get.nAnneal(this)
             n = this.theSolver.nAnneal;
         end
-        function n = get.nSamples(this)
+        function n  = get.nSamples(this)
             n = numel(cell2mat(this.independentData));
         end
         function n  = get.nProposalsQC(this)
@@ -243,21 +244,53 @@ classdef AbstractMcmcStrategy < mlbayesian.AbstractBayesianStrategy & mlbayesian
             end
         end
         function sse  = sumSquaredErrors(this, p)
-            %% SUMSQUAREDERRORS returns the sum-of-squared-errors summed over the cells of this.dependentData and 
-            %  corresponding this.estiamteDataFast. 
+            %% SUMSQUAREDERRORS returns the sum-of-square residuals for all cells of this.dependentData and 
+            %  corresponding this.estimateDataFast.  Compared to AbstractMcmcStrategy.sumSquaredErrors, this 
+            %  overriding implementation weights of the log-likelihood with Jeffrey's prior according to this.independentData.
+            %  See also:  mlbayesian.AbstractMcmcStrategy.sumSquaredErrors, 
+            %             mlkinetics.AbstractKinetics.jeffreysPrior.
             
             p   = num2cell(p);
             sse = 0;
             edf = this.estimateDataFast(p{:});
-            for iidx = 1:length(this.dependentData) 
+            for iidx = 1:length(this.dependentData)
+                %sigma2 = this.dependentData{iidx};
+                %sigma2(sigma2 < eps) = 1;
                 sse = sse + ...
-                      sum(abs(this.dependentData{iidx} - edf{iidx}).^2./abs(this.dependentData{iidx}));
+                      sum( (this.dependentData{iidx} - edf{iidx}).^2 .* ...
+                            this.jeffreysPrior{iidx} );
+                          % ./ sigma2 );
             end
-            if (sse < eps)
-                sse = sse + (1 + rand(1))*eps; 
+            if (sse < 10*eps)
+                sse = sse + (1 + rand(1))*10*eps; 
             end
         end
- 	end 
+    end 
+    
+    %% PROTECTED
+    
+    methods (Access = protected)
+        function p = buildJeffreysPrior(this)
+            %% JEFFREYSPRIOR
+            %  Cf. Gregory, Bayesian Logical Data Analysis for the Physical Sciences, sec. 3.7.1.
+            
+            p = cell(this.independentData);
+            for iidx = 1:length(p)
+                t = this.independentData{iidx};
+                for it = 1:length(t)
+                    if (abs(t(it)) < eps)
+                        t(it) = min(t(t > eps));
+                    end
+                end
+                %taus_ = t(2:end) - t(1:end-1);
+                %taus_ = [taus_ taus_(end)]; %#ok<AGROW>
+                p{iidx} = 1./(t*log(t(end)/t(1)));
+                p{iidx} = p{iidx}/sum(p{iidx});
+               %p{iidx} = p{iidx}/sum(p{iidx}.*taus_);
+               %p{iidx} = p{iidx}.*taus_/sum(p{iidx}.*taus_); % include the inhomogeneous metric
+            end
+        end
+    end
 
 	%  Created with Newcl by John J. Lee after newfcn by Frank Gonzalez-Morphy
  end

@@ -24,11 +24,11 @@ classdef (Abstract) AbstractBayesianStrategy < mlio.AbstractIO & mlbayesian.IBay
     end
     
     methods %% GET/SET
-        function p = get.bestFitParams(this)
+        function p    = get.bestFitParams(this)
             assert(~isempty(this.theSolver));
             p = this.theSolver.bestFitParams;
         end
-        function g = get.dependentData(this)
+        function g    = get.dependentData(this)
             assert(~isempty(this.dependentData_));
             g = this.dependentData_;
         end
@@ -36,13 +36,13 @@ classdef (Abstract) AbstractBayesianStrategy < mlio.AbstractIO & mlbayesian.IBay
             assert(iscell(s));
             this.dependentData_ = s;
         end
-        function e = get.expectedBestFitParams(this)
+        function e    = get.expectedBestFitParams(this)
             assert(~isempty(this.expectedBestFitParams_), ...
                    'mlbayesian:attemptToAccessUnassignedVar', ...
                    'concrete implementation of AbstractBayesianStrategy must assign this.expectedBestFitParams_');
             e = this.expectedBestFitParams_;
         end
-        function g = get.independentData(this)
+        function g    = get.independentData(this)
             assert(~isempty(this.independentData_));
             g = this.independentData_;
         end
@@ -50,26 +50,26 @@ classdef (Abstract) AbstractBayesianStrategy < mlio.AbstractIO & mlbayesian.IBay
             assert(iscell(s));
             this.independentData_ = s;
         end
-        function p = get.meanParams(this)
+        function p    = get.meanParams(this)
             assert(~isempty(this.theSolver));
             p = this.theSolver.meanParams;
         end
-        function g = get.sessionData(this)
+        function g    = get.sessionData(this)
             g = this.sessionData_;
         end
         function this = set.sessionData(this, s)
             assert(isa(s, 'mlpipeline.ISessionData'));
             this.sessionData_ = s;
         end
-        function p = get.stdParams(this)
+        function p    = get.stdParams(this)
             assert(~isempty(this.theSolver));
             p = this.theSolver.stdParams;
         end
-        function p = get.stdOfError(this)
+        function p    = get.stdOfError(this)
             assert(~isempty(this.theSolver));
             p = this.theSolver.stdOfError;
         end
-        function g = get.theParameters(this)
+        function g    = get.theParameters(this)
             assert(~isempty(this.theParameters_));
             g = this.theParameters_;
         end
@@ -77,14 +77,14 @@ classdef (Abstract) AbstractBayesianStrategy < mlio.AbstractIO & mlbayesian.IBay
             assert(isa(s, 'mlbayesian.IMcmcParameters'));
             this.theParameters_ = s;
         end
-        function g = get.theSolver(this)
+        function g    = get.theSolver(this)
             g = this.theSolver_;
         end
         function this = set.theSolver(this, s)
             assert(isa(s, 'mlbayesian.IMCMC'));
             this.theSolver_ = s;
         end
-        function v = get.verbosity(this)
+        function v    = get.verbosity(this)
             v = this.verbosity_;
         end
     end
@@ -113,17 +113,17 @@ classdef (Abstract) AbstractBayesianStrategy < mlio.AbstractIO & mlbayesian.IBay
             this.fileprefix = sprintf(strrep(class(this), '.', '_'));
             this.filesuffix = '.mat';
         end 
-        function save(this)            
+        function save(this)
             save(this.fqfilename, 'this');
         end
     end
     
     methods (Static)
-        function h    = Heaviside(t, t0)
+        function h       = Heaviside(t, t0)
             h = zeros(size(t));
             h = h + double(t > t0);
         end
-        function appendState(fname, state)
+        function           appendState(fname, state)
             if (~lstrfind(fname, '.mat'))
                 fname = [fname '.mat'];
             end
@@ -161,7 +161,7 @@ classdef (Abstract) AbstractBayesianStrategy < mlio.AbstractIO & mlbayesian.IBay
                 timeDiffs = times(2:end) - times(1:end-1);
             end
         end
-        function saveState(fname, state)
+        function           saveState(fname, state)
             if (isempty(fname) || isempty(state))
                 return
             end
@@ -170,7 +170,7 @@ classdef (Abstract) AbstractBayesianStrategy < mlio.AbstractIO & mlbayesian.IBay
             end
             save(fname, 'state');
         end
-        function conc = slide(conc, t, Dt)
+        function conc    = slide(conc, t, Dt)
             %% SLIDE slides discretized function conc(t) to conc(t - Dt);
             %  Dt > 0 will slide conc(t) towards later times t.
             %  Dt < 0 will slide conc(t) towards earlier times t.
@@ -185,13 +185,14 @@ classdef (Abstract) AbstractBayesianStrategy < mlio.AbstractIO & mlbayesian.IBay
             tinc  = t(2) - t(1);
             t_    = [(t - tspan - tinc) t];   % prepend times
             conc_ = [zeros(size(conc)) conc]; % prepend zeros
+            conc_(isnan(conc_)) = 0;
             conc  = pchip(t_, conc_, t - Dt); % interpolate onto t shifted by Dt; Dt > 0 shifts to right
             
             if (trans)
                 conc = conc';
             end
         end
-        function A    = pchip(t, A, t_, Dt)
+        function A       = pchip(t, A, t_, Dt)
             %% PCHIP slides discretized function A(t) to A(t_ - Dt);
             %  Dt > 0 will slide conc(t) towards to later values of t.
             %  Dt < 0 will slide conc(t) towards to earlier values of t.
@@ -208,7 +209,7 @@ classdef (Abstract) AbstractBayesianStrategy < mlio.AbstractIO & mlbayesian.IBay
             A     = [zeros(size(A)) A]; % prepend zeros
             A     = pchip(t, A, t_ - Dt); % interpolate onto t shifted by Dt; Dt > 0 shifts conc to right
         end
-        function tf   = uniformSampling(t)
+        function tf      = uniformSampling(t)
             t   = mlsystem.VectorTools.ensureRowVector(t);
             dts = t(2:end) - t(1:end-1);
             dt1 = t(2) - t(1);
