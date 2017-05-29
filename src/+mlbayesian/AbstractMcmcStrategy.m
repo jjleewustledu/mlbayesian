@@ -270,6 +270,22 @@ classdef AbstractMcmcStrategy < mlbayesian.AbstractBayesianStrategy & mlbayesian
     %% PROTECTED
     
     methods (Access = protected)
+        function p = buildJeffreysPrior__(this)
+            %% JEFFREYSPRIOR
+            %  Cf. Gregory, Bayesian Logical Data Analysis for the Physical Sciences, sec. 3.7.1.
+            
+            p = cell(this.independentData);
+            for iidx = 1:length(p)
+                t = this.independentData{iidx};
+                for it = 1:length(t)
+                    if (abs(t(it)) < eps)
+                        t(it) = min(t(t > eps));
+                    end
+                end
+                p{iidx} = 1./(t*log(t(end)/t(1)));
+                p{iidx} = p{iidx}/sum(p{iidx});
+            end
+        end
         function p = buildJeffreysPrior(this)
             %% JEFFREYSPRIOR
             %  Cf. Gregory, Bayesian Logical Data Analysis for the Physical Sciences, sec. 3.7.1.
@@ -282,12 +298,10 @@ classdef AbstractMcmcStrategy < mlbayesian.AbstractBayesianStrategy & mlbayesian
                         t(it) = min(t(t > eps));
                     end
                 end
-                %taus_ = t(2:end) - t(1:end-1);
-                %taus_ = [taus_ taus_(end)]; %#ok<AGROW>
+                taus_ = t(2:end) - t(1:end-1);
+                taus_ = [taus_ taus_(end)]; %#ok<AGROW>
                 p{iidx} = 1./(t*log(t(end)/t(1)));
-                p{iidx} = p{iidx}/sum(p{iidx});
-               %p{iidx} = p{iidx}/sum(p{iidx}.*taus_);
-               %p{iidx} = p{iidx}.*taus_/sum(p{iidx}.*taus_); % include the inhomogeneous metric
+                p{iidx} = p{iidx}.*taus_/sum(p{iidx}.*taus_);
             end
         end
     end
