@@ -23,7 +23,16 @@ classdef (Abstract) AbstractBayesianStrategy < mlio.AbstractIO & mlbayesian.IBay
         verbosity
     end
     
-    methods %% GET/SET
+    methods (Static)
+        function this = load(fn) %#ok<STOUT>
+            load(fn, 'this');
+        end
+    end
+    
+    methods 
+        
+        %% GET/SET
+        
         function p    = get.bestFitParams(this)
             assert(~isempty(this.theSolver));
             p = this.theSolver.bestFitParams;
@@ -87,14 +96,9 @@ classdef (Abstract) AbstractBayesianStrategy < mlio.AbstractIO & mlbayesian.IBay
         function v    = get.verbosity(this)
             v = this.verbosity_;
         end
-    end
     
-    methods (Static)
-        function this = load(fn) %#ok<STOUT>
-            load(fn, 'this');
-        end
-    end
-	methods 
+        %%
+        
  		function this = AbstractBayesianStrategy(varargin)
  			%% ABSTRACTBAYESIANSTRATEGY
  			%  Usage:  this = AbstractBayesianStrategy([independent_data, dependent_data])
@@ -230,7 +234,7 @@ classdef (Abstract) AbstractBayesianStrategy < mlio.AbstractIO & mlbayesian.IBay
     end
     
     methods (Access = 'protected')
-        function this =       setVerbosityCache(this)
+        function this = setVerbosityCache(this)
             this.verbosity_ = str2num(getenv('VERBOSITY')); %#ok<ST2NM>
             if (isempty(this.verbosity_))
                 this.verbosity_ = str2num(getenv('VERBOSE'));  %#ok<ST2NM>

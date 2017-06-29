@@ -15,8 +15,8 @@ classdef (Abstract) IMcmcParameters
         nAnneal    % number of loops per annealing temp
         nSamples
         
-        paramsMap     % parameter name to struct that defines values for fixed, min, mean, max, std, fixedValue
-        paramsIndices % parameter name to unique integer index
+        mapParams     % parameter name to struct that defines values for fixed, min, mean, max, std, fixedValue
+        indicesParams % parameter name to unique integer index
         
         fixed
         min
@@ -24,8 +24,11 @@ classdef (Abstract) IMcmcParameters
         max
         std
         fixedValue
+    end 
+    
+    methods (Abstract)        
         length
- 	end 
+    end
 
 	%  Created with Newcl by John J. Lee after newfcn by Frank Gonzalez-Morphy
  end

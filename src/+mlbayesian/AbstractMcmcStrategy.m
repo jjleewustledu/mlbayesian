@@ -43,7 +43,10 @@ classdef AbstractMcmcStrategy < mlbayesian.AbstractBayesianStrategy & mlbayesian
         annealingSdpar
     end
     
-    methods %% GET
+    methods 
+        
+        %% GET
+        
         function t  = get.dt(this)
             for iidx = 1:length(this.independentData)
                 t{iidx} = min(this.taus{iidx});
@@ -107,9 +110,9 @@ classdef AbstractMcmcStrategy < mlbayesian.AbstractBayesianStrategy & mlbayesian
         function a  = get.annealingSdpar(this)
             a = this.theSolver.annealingSdpar;
         end
-    end
-
-	methods
+        
+        %%
+        
  		function this = AbstractMcmcStrategy(varargin) 
  			%% ABSTRACTMCMCSTRATEGY 
  			%  Usage:  this = AbstractMcmcStrategy() 
@@ -136,15 +139,15 @@ classdef AbstractMcmcStrategy < mlbayesian.AbstractBayesianStrategy & mlbayesian
             disp(s);
         end
         function        ensureKeyOrdering(this, currentKeys)
-            storedKeys = this.theParameters.paramsMap.keys;
-            for k = 1:length(storedKeys)
-                assert(strcmp(storedKeys{k}, currentKeys{k}), ...
+            expectedKeys = this.theParameters.keysParams;
+            for k = 1:length(expectedKeys)
+                assert(strcmp(expectedKeys{k}, currentKeys{k}), ...
                        sprintf('AbstractMcmcStrategy.ensureKeyOrdering:  expected %s but received %s', ...
-                       storedKeys{k}, currentKeys{k}));
+                       expectedKeys{k}, currentKeys{k}));
             end
         end
         function ed   = estimateData(this)
-            keys        = this.theParameters.paramsMap.keys;
+            keys        = this.theParameters.keysParams;
             finalParams = cellfun(@(x) this.finalParams(x), keys);
             ed          = this.estimateDataFast(finalParams{:});
         end
@@ -218,29 +221,31 @@ classdef AbstractMcmcStrategy < mlbayesian.AbstractBayesianStrategy & mlbayesian
         end        
         function this = runMcmc(this, varargin)
             %% RUNMCMC should be run from within method estimateParameters, implemented as described below.
-            %  @params paramsMap is a containers.Map with parameter keys & values
+            %  @params mapParams is a containers.Map with parameter keys & values
             %  @params paramsKeys is a cell array enumerating param keys to be checked for equivalence with
-            %  paramsMap.keys
+            %  mapParams.keys
             %  Usage:  map = containers.Map
             %          map('some_param') = struct('fixed', 0, 'min', eps, 'mean', 1, 'max',  10)
             %          this = this.runMcmc(map)
             
             ip = inputParser;
-            addRequired( ip, 'paramsMap',        @(x) isa(x, 'containers.Map'));
+            addRequired( ip, 'mapParams',        @(x) isa(x, 'containers.Map'));
             addParameter(ip, 'keysToVerify', {}, @iscell);
             parse(ip, varargin{:});
             
             import mlbayesian.*;
-            this.theParameters   = McmcParameters(ip.Results.paramsMap, numel(cell2mat(this.independentData)));    
+            this.theParameters   = McmcParameters( ...
+                ip.Results.mapParams, numel(cell2mat(this.independentData)), ...
+                'pkeys', ip.Results.keysToVerify);    
             if (~isempty(ip.Results.keysToVerify))
                 this.ensureKeyOrdering(ip.Results.keysToVerify);
             end
             this.theSolver       = McmcCellular(this);
             [~,~,this.theSolver] = this.theSolver.runMcmc;     
             this.printQNQ;
-            keys = ip.Results.paramsMap.keys;
-            for k = 1:length(keys) 
-                this.(keys{k}) = this.finalParams(keys{k});
+            keys_ = ip.Results.keysToVerify;
+            for k = 1:length(keys_) 
+                this.(keys_{k}) = this.finalParams(keys_{k});
             end
         end
         function sse  = sumSquaredErrors(this, p)
@@ -269,8 +274,11 @@ classdef AbstractMcmcStrategy < mlbayesian.AbstractBayesianStrategy & mlbayesian
     
     %% PROTECTED
     
+    properties (Access = protected)
+    end
+    
     methods (Access = protected)
-        function p = buildJeffreysPrior__(this)
+        function p = buildJeffreysPrior(this)
             %% JEFFREYSPRIOR
             %  Cf. Gregory, Bayesian Logical Data Analysis for the Physical Sciences, sec. 3.7.1.
             
@@ -286,7 +294,7 @@ classdef AbstractMcmcStrategy < mlbayesian.AbstractBayesianStrategy & mlbayesian
                 p{iidx} = p{iidx}/sum(p{iidx});
             end
         end
-        function p = buildJeffreysPrior(this)
+        function p = buildJeffreysPrior__(this)
             %% JEFFREYSPRIOR
             %  Cf. Gregory, Bayesian Logical Data Analysis for the Physical Sciences, sec. 3.7.1.
             

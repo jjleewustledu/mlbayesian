@@ -539,8 +539,7 @@ classdef McmcCellular < mlbayesian.IMCMC
             end
         end
         function  lbl       = paramIndexToLabel(this, idx)
-            map  = this.parameters.paramsMap;
-            keys = map.keys;
+            keys = this.parameters.keysParams;
             lbl  = keys{idx};
             if (isnumeric(lbl))
                 lbl = num2str(lbl);
