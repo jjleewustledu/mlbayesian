@@ -10,18 +10,18 @@ classdef GeneralizedGammaStrategy < mlbayesian.AbstractMcmcStrategy
  	%% It was developed on Matlab 9.2.0.538062 (R2017a) for MACI64.  Copyright 2017 John Joowon Lee.
  	
 	properties 	
-        a1  = 3.7
-        b1  = 0.34
+        a1  = 7.16
+        b1  = 0.600
         p1  = 1
-        t01 = 11 % t01 < t02 by this.adjustParams
-        a2  = 3.7
-        b2  = 0.34
+        t01 = 8.83 % t01 < t02 by this.adjustParams
+        a2  = 8.43
+        b2  = 0.998
         p2  = 1
-        t02 = 20
+        t02 = 22.8
+        weight1 = 0.872 % > 0.5 by this.mapParams
         S   = 0
         k   = 0
         t0  = 30
-        weight1 = 1 % > 0.5 by this.mapParams
         
         notes = ''
         xLabel = 'time/s'
@@ -56,8 +56,9 @@ classdef GeneralizedGammaStrategy < mlbayesian.AbstractMcmcStrategy
             this.plot;
         end
         function r    = rho(a1, b1, p1, t01, a2, b2, p2, t02, weight1, S, k, t0, t)
-            r = mlbayesian.GeneralizedGammaTerms.gammaStretchSeriesSteady( ...
-                            a1, b1, p1, t01, a2, b2, p2, t02, weight1, S, k, t0, t);
+            r = mlbayesian.GeneralizedGammaTerms.gammaStretchSeries( ...
+                            a1, b1, p1, t01, a2, b2, p2, t02, weight1, t);
+            %r = mlbayesian.GeneralizedGammaTerms.gammaPair(a1, b1, t01, t02, weight1, t);
         end
         function this = simulateMcmc(a1, b1, p1, t01, a2, b2, p2, t02, weight1, S, k, t0, t, mapParams, keysParams)
             rho = mlbayesian.GeneralizedGammaStrategy.rho( ...
@@ -98,13 +99,13 @@ classdef GeneralizedGammaStrategy < mlbayesian.AbstractMcmcStrategy
             m = containers.Map;
             m('a1')  = struct('fixed', 0, 'min', 1,     'mean', this.a1,  'max', 10);
             m('b1')  = struct('fixed', 0, 'min', 0.001, 'mean', this.b1,  'max', 10);
-            m('p1')  = struct('fixed', 0, 'min', 0.01,  'mean', this.p1,  'max', 10);
+            m('p1')  = struct('fixed', 1, 'min', 0.01,  'mean', this.p1,  'max', 10);
             m('t01') = struct('fixed', 0, 'min', 0,     'mean', this.t01, 'max', 100);
-            m('a2')  = struct('fixed', 1, 'min', 1,     'mean', this.a2,  'max', 10);
-            m('b2')  = struct('fixed', 1, 'min', 0.001, 'mean', this.b2,  'max', 10);
+            m('a2')  = struct('fixed', 0, 'min', 1,     'mean', this.a2,  'max', 10);
+            m('b2')  = struct('fixed', 0, 'min', 0.001, 'mean', this.b2,  'max', 10);
             m('p2')  = struct('fixed', 1, 'min', 0.01,  'mean', this.p2,  'max', 10);
-            m('t02') = struct('fixed', 1, 'min', 0,     'mean', this.t02, 'max', 100);
-            m('weight1') = struct('fixed', 1, 'min', 0.5+eps, 'mean', this.weight1, 'max', 1);
+            m('t02') = struct('fixed', 0, 'min', 0,     'mean', this.t02, 'max', 100);
+            m('weight1') = struct('fixed', 0, 'min', 0.5+eps, 'mean', this.weight1, 'max', 1);
             m('S')   = struct('fixed', 1, 'min', 0,     'mean', this.S,   'max', 1);
             m('k')   = struct('fixed', 1, 'min', 0,     'mean', this.k,   'max', 10);
             m('t0')  = struct('fixed', 1, 'min', 0,     'mean', this.t0,  'max', 100);
@@ -242,9 +243,9 @@ classdef GeneralizedGammaStrategy < mlbayesian.AbstractMcmcStrategy
             edf = this.estimateDataFast(p{:});
             for iidx = 1:length(this.dependentData)
                 sse = sse + ...
-                      sum( (this.dependentData{iidx} - edf{iidx}).^2 .* ...
-                            mlbayesian.AbstractBayesianStrategy.slide( ...
-                                this.jeffreysPrior{iidx}, this.independentData{iidx}, this.t01) );
+                      sum( (this.dependentData{iidx} - edf{iidx}).^2 ); % .* ...
+                            %mlbayesian.AbstractBayesianStrategy.slide( ...
+                            %    this.jeffreysPrior{iidx}, this.independentData{iidx}, this.t01) );
             end
             if (sse < 10*eps)
                 sse = sse + (1 + rand(1))*10*eps; 

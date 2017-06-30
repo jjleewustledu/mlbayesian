@@ -22,6 +22,11 @@ classdef GeneralizedGammaTerms
             import mlbayesian.GeneralizedGammaTerms.*;
             rho = weight1*gammaStretchC(a1, b1, p1, t01, t) + (1 - weight1)*gammaStretchC(a2, b2, p2, t02, t);
             rho = abs(rho);
+        end    
+        function rho = gammaStretchPair(a1, b1, p1, t01, t02, weight1, t)
+            import mlbayesian.GeneralizedGammaTerms.*;
+            rho = weight1*gammaStretchC(a1, b1, p1, t01, t) + (1 - weight1)*gammaStretchC(a1, b1, p1, t02, t);
+            rho = abs(rho);
         end        
         function rho = gammaSeriesSteady(a1, b1, t01, a2, b2, t02, weight1, S, k, t0, t)
             import mlbayesian.GeneralizedGammaTerms.*;
@@ -31,6 +36,10 @@ classdef GeneralizedGammaTerms
         function rho = gammaSeries(a1, b1, t01, a2, b2, t02, weight1, t)
             import mlbayesian.GeneralizedGammaTerms.*;
             rho = weight1*gammaTermR(a1, b1, t01, t) + (1 - weight1)*gammaTermR(a2, b2, t02, t);
+        end
+        function rho = gammaPair(a1, b1, t01, t02, weight1, t)
+            import mlbayesian.GeneralizedGammaTerms.*;
+            rho = weight1*gammaTermR(a1, b1, t01, t) + (1 - weight1)*gammaTermR(a1, b1, t02, t);
         end
         function rho = gammaStretchSteady(a1, b1, p1, t01, S, k, t0, t)
             import mlbayesian.GeneralizedGammaTerms.*;
