@@ -71,7 +71,7 @@ classdef GeneralizedGammaTerms
                 rho = S*(1 - exp(-k*tau)) .* mlbayesian.AbstractBayesianStrategy.Heaviside(tau, t0);
             else 
                 tau = t - t(1);
-                rho = S*(1 - exp(-k*tau)) .* mlbayesian.AbstractBayesianStrategy.Heaviside(tau, t0);
+                rho = S*(1 - exp(-k*tau));
                 rho = mlbayesian.AbstractBayesianStrategy.slide(rho, t, t0 - t(1));
             end
         end

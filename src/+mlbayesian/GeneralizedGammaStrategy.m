@@ -10,18 +10,19 @@ classdef GeneralizedGammaStrategy < mlbayesian.AbstractMcmcStrategy
  	%% It was developed on Matlab 9.2.0.538062 (R2017a) for MACI64.  Copyright 2017 John Joowon Lee.
  	
 	properties 	
-        a1  = 7.16
-        b1  = 0.600
+        a1  = 3.31
+        b1  = 0.149
         p1  = 1
-        t01 = 8.83 % t01 < t02 by this.adjustParams
-        a2  = 8.43
-        b2  = 0.998
+        t01 = 7.43 % t01 < t02 or t01 > t02 by this.adjustParams
+        a2  = 20.2
+        b2  = 0.700
         p2  = 1
-        t02 = 22.8
-        weight1 = 0.872 % > 0.5 by this.mapParams
+        t02 = 0.130
+        weight1 = 0.521 % > 0.5 by this.mapParams
         S   = 0
         k   = 0
-        t0  = 30
+        t0  = 40
+        force_t01_lt_t02 = false
         
         notes = ''
         xLabel = 'time/s'
@@ -38,21 +39,23 @@ classdef GeneralizedGammaStrategy < mlbayesian.AbstractMcmcStrategy
         function [this,lg] = godo
             this.filepath = fullfile(getenv('HOME'), 'Local', 'src', 'mlcvl', 'mlbayesian', 'data', '');
             cd(this.filepath);
-            load('kernelBest.mat');
-            kernel = zeros(size(kernelBest));
-            kernel(12:46) = kernelBest(12:46);
+            load('kernel6_span33_deg4.mat');
+            %kernel = zeros(size(kernelBest));
+            %kernel(12:46) = kernelBest(12:46);
+            kernel = kernel(1:120);
             kernel = kernel/sum(kernel);
-            this = mlbayesian.GeneralizedGammaStrategy({0:101}, {kernel'});
+            this = mlbayesian.GeneralizedGammaStrategy({0:119}, {kernel'});
             [this,lg] = this.doBayes;
         end
         function        plotInitial
             this.filepath = fullfile(getenv('HOME'), 'Local', 'src', 'mlcvl', 'mlbayesian', 'data', '');
             cd(this.filepath);
-            load('kernelBest.mat');
-            kernel = zeros(size(kernelBest));
-            kernel(12:46) = kernelBest(12:46);
+            load('kernel6_span33_deg4.mat');
+            %kernel = zeros(size(kernelBest));
+            %kernel(12:46) = kernelBest(12:46);
+            kernel = kernel(1:120);
             kernel = kernel/sum(kernel);
-            this = mlbayesian.GeneralizedGammaStrategy({0:101}, {kernel'});
+            this = mlbayesian.GeneralizedGammaStrategy({0:119}, {kernel'});
             this.plot;
         end
         function r    = rho(a1, b1, p1, t01, a2, b2, p2, t02, weight1, S, k, t0, t)
@@ -97,12 +100,12 @@ classdef GeneralizedGammaStrategy < mlbayesian.AbstractMcmcStrategy
             end
             
             m = containers.Map;
-            m('a1')  = struct('fixed', 0, 'min', 1,     'mean', this.a1,  'max', 10);
-            m('b1')  = struct('fixed', 0, 'min', 0.001, 'mean', this.b1,  'max', 10);
+            m('a1')  = struct('fixed', 0, 'min', 1,     'mean', this.a1,  'max', 50);
+            m('b1')  = struct('fixed', 0, 'min', 0.000, 'mean', this.b1,  'max', 10);
             m('p1')  = struct('fixed', 1, 'min', 0.01,  'mean', this.p1,  'max', 10);
             m('t01') = struct('fixed', 0, 'min', 0,     'mean', this.t01, 'max', 100);
-            m('a2')  = struct('fixed', 0, 'min', 1,     'mean', this.a2,  'max', 10);
-            m('b2')  = struct('fixed', 0, 'min', 0.001, 'mean', this.b2,  'max', 10);
+            m('a2')  = struct('fixed', 0, 'min', 1,     'mean', this.a2,  'max', 50);
+            m('b2')  = struct('fixed', 0, 'min', 0.000, 'mean', this.b2,  'max', 10);
             m('p2')  = struct('fixed', 1, 'min', 0.01,  'mean', this.p2,  'max', 10);
             m('t02') = struct('fixed', 0, 'min', 0,     'mean', this.t02, 'max', 100);
             m('weight1') = struct('fixed', 0, 'min', 0.5+eps, 'mean', this.weight1, 'max', 1);
@@ -115,10 +118,19 @@ classdef GeneralizedGammaStrategy < mlbayesian.AbstractMcmcStrategy
     
         function ps   = adjustParams(this, ps)
             theParams = this.theParameters;
-            if (ps(theParams.paramsIndices('t01')) > ps(theParams.paramsIndices('t02')))
-                tmp                                = ps(theParams.paramsIndices('t01'));
-                ps(theParams.paramsIndices('t01')) = ps(theParams.paramsIndices('t02'));
-                ps(theParams.paramsIndices('t02')) = tmp;
+            if (this.force_t01_lt_t02)                
+                if (ps(theParams.paramsIndices('t01')) > ps(theParams.paramsIndices('t02')))
+                    tmp                                = ps(theParams.paramsIndices('t01'));
+                    ps(theParams.paramsIndices('t01')) = ps(theParams.paramsIndices('t02'));
+                    ps(theParams.paramsIndices('t02')) = tmp;
+                end
+            else
+                
+                if (ps(theParams.paramsIndices('t02')) > ps(theParams.paramsIndices('t01')))
+                    tmp                                = ps(theParams.paramsIndices('t02'));
+                    ps(theParams.paramsIndices('t02')) = ps(theParams.paramsIndices('t01'));
+                    ps(theParams.paramsIndices('t01')) = tmp;
+                end
             end
         end
         function [this,lg] = doBayes(this)
@@ -145,7 +157,6 @@ classdef GeneralizedGammaStrategy < mlbayesian.AbstractMcmcStrategy
             addOptional(ip, 'mapParams', this.mapParams, @(x) isa(x, 'containers.Map'));
             parse(ip, varargin{:});
             
-            this.keysParams_ = {'a1' 'b1' 'p1' 't01' 'a2' 'b2' 'p2' 't02' 'weight1' 'S' 'k' 't0'};
             this = this.runMcmc(ip.Results.mapParams, 'keysToVerify', this.keysParams_);
         end
         function r    = itsRho(this)
@@ -260,6 +271,7 @@ classdef GeneralizedGammaStrategy < mlbayesian.AbstractMcmcStrategy
 
  			this = this@mlbayesian.AbstractMcmcStrategy(varargin{:});            
             this.jeffreysPrior = this.buildJeffreysPrior;
+            this.keysParams_ = {'a1' 'b1' 'p1' 't01' 'a2' 'b2' 'p2' 't02' 'weight1' 'S' 'k' 't0'};
  		end
  	end 
     
