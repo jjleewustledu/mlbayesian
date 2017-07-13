@@ -53,10 +53,13 @@ classdef GeneralizedGammaStrategy < mlbayesian.AbstractMcmcStrategy
             load('kernel6_span33_deg4.mat');
             %kernel = zeros(size(kernelBest));
             %kernel(12:46) = kernelBest(12:46);
-            kernel = kernel(1:120);
+            kernel = kernel(1:120); %#ok<NODEF>
             kernel = kernel/sum(kernel);
             this = mlbayesian.GeneralizedGammaStrategy({0:119}, {kernel'});
             this.plot;
+        end
+        function mdl  = model(varargin)
+            mdl = mlbayesian.GeneralizedGammaStrategy.rho(varargin{:});
         end
         function r    = rho(a1, b1, p1, t01, a2, b2, p2, t02, weight1, S, k, t0, t)
             r = mlbayesian.GeneralizedGammaTerms.gammaStretchSeries( ...
@@ -269,8 +272,7 @@ classdef GeneralizedGammaStrategy < mlbayesian.AbstractMcmcStrategy
             %  @params dependentData is cell.
             %  @returns this.
 
- 			this = this@mlbayesian.AbstractMcmcStrategy(varargin{:});            
-            this.jeffreysPrior = this.buildJeffreysPrior;
+ 			this = this@mlbayesian.AbstractMcmcStrategy(varargin{:}); 
             this.keysParams_ = {'a1' 'b1' 'p1' 't01' 'a2' 'b2' 'p2' 't02' 'weight1' 'S' 'k' 't0'};
  		end
  	end 
@@ -279,33 +281,6 @@ classdef GeneralizedGammaStrategy < mlbayesian.AbstractMcmcStrategy
     
     properties (Access = 'protected')
         mapParams_
-        keysParams_
-    end
-    
-    methods (Access = 'protected')
-        function plotParArgs(this, par, args, vars)
-            assert(lstrfind(par, properties('mlbayesian.GeneralizedGammaStrategy')));
-            assert(iscell(args));
-            assert(isnumeric(vars));
-            figure
-            hold on
-            rho = this.itsRho;
-            for v = 1:length(args)
-                argsv = args{v};
-                plot(0:length(rho)-1, ...
-                     mlbayesian.GeneralizedGammaStrategy.rho( ...
-                         argsv{1}, argsv{2}, argsv{3}, argsv{4},  argsv{5},  argsv{6}, ...
-                         argsv{7}, argsv{8}, argsv{9}, argsv{10}, argsv{11}, argsv{12}, this.times{1}));
-            end
-            plot(0:length(rho)-1, this.dependentData{1}, 'o', 'LineWidth', 2);
-            title(sprintf('a1 %g, b1 %g, p1 %g, t01 %g, a2 %g, b2 %g, p2 %g, t02 %g, weight1 %g, S %g, k %g, t0 %g', ...
-                          argsv{1}, argsv{2}, argsv{3}, argsv{4},  argsv{5},  argsv{6}, ...
-                          argsv{7}, argsv{8}, argsv{9}, argsv{10}, argsv{11}, argsv{12}));
-            legend(['bayes' ...
-                    cellfun(@(x) sprintf('%s = %g', par, x), num2cell(vars), 'UniformOutput', false)]);
-            xlabel('time sampling index');
-            ylabel(this.yLabel);
-        end
     end
 
 	%  Created with Newcl by John J. Lee after newfcn by Frank Gonzalez-Morphy

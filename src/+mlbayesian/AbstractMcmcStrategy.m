@@ -1,5 +1,6 @@
 classdef AbstractMcmcStrategy < mlbayesian.AbstractBayesianStrategy & mlbayesian.IMcmcStrategy
-	%% ABSTRACTMCMCSTRATEGY  
+	%% ABSTRACTMCMCSTRATEGY 
+    %  Uses a form of Jeffreys' prior in sumSquaredErrors.
 
 	%  $Revision$
  	%  was created 23-Nov-2015 17:37:52
@@ -12,8 +13,17 @@ classdef AbstractMcmcStrategy < mlbayesian.AbstractBayesianStrategy & mlbayesian
         mapParams
     end
     
-    properties  
-        jeffreysPrior
+    methods (Static, Abstract)
+        mdl = model
+    end
+    
+    methods (Abstract)
+        plot(this, varargin)
+        plotParVars(this, par, vars)
+        this = simulateItsMcmc(this)
+    end
+    
+    properties          
         showAnnealing  = true
         showBeta       = true
         showBestFit    = true
@@ -41,6 +51,8 @@ classdef AbstractMcmcStrategy < mlbayesian.AbstractBayesianStrategy & mlbayesian
         annealingAvpar
         annealingInitz
         annealingSdpar
+        
+        jeffreysPrior
     end
     
     methods 
@@ -109,6 +121,10 @@ classdef AbstractMcmcStrategy < mlbayesian.AbstractBayesianStrategy & mlbayesian
         end
         function a  = get.annealingSdpar(this)
             a = this.theSolver.annealingSdpar;
+        end        
+        
+        function j  = get.jeffreysPrior(this)
+            j = this.jeffreysPrior_;
         end
         
         %%
@@ -117,7 +133,8 @@ classdef AbstractMcmcStrategy < mlbayesian.AbstractBayesianStrategy & mlbayesian
  			%% ABSTRACTMCMCSTRATEGY 
  			%  Usage:  this = AbstractMcmcStrategy() 
 
- 			this = this@mlbayesian.AbstractBayesianStrategy(varargin{:}); 
+ 			this = this@mlbayesian.AbstractBayesianStrategy(varargin{:});
+            this = this.buildJeffreysPrior;
         end 
         
         function ps   = adjustParams(~, ps)
@@ -165,7 +182,11 @@ classdef AbstractMcmcStrategy < mlbayesian.AbstractBayesianStrategy & mlbayesian
         end
         function        histStdOfError(this) 
             this.theSolver.histStdOfError;
-        end        
+        end            
+        function mdl  = itsModel(this)
+            mdlCell = this.estimateDataFast(this.keysArgs_);
+            mdl = mdlCell{1};
+        end
         function len  = length(this)
             %% LENGTH
             %  @returns length of dependent_data and of indepdendent_data, both of which must have the same array sizes
@@ -263,7 +284,7 @@ classdef AbstractMcmcStrategy < mlbayesian.AbstractBayesianStrategy & mlbayesian
                 %sigma2(sigma2 < eps) = 1;
                 sse = sse + ...
                       sum( (this.dependentData{iidx} - edf{iidx}).^2 .* ...
-                            this.jeffreysPrior{iidx} );
+                            this.jeffreysPrior_{iidx} );
                           % ./ sigma2 );
             end
             if (sse < 10*eps)
@@ -275,10 +296,13 @@ classdef AbstractMcmcStrategy < mlbayesian.AbstractBayesianStrategy & mlbayesian
     %% PROTECTED
     
     properties (Access = protected)
+        jeffreysPrior_
+        keysArgs_
+        keysParams_
     end
     
     methods (Access = protected)
-        function p = buildJeffreysPrior(this)
+        function this = buildJeffreysPrior(this)
             %% JEFFREYSPRIOR
             %  Cf. Gregory, Bayesian Logical Data Analysis for the Physical Sciences, sec. 3.7.1.
             
@@ -293,8 +317,9 @@ classdef AbstractMcmcStrategy < mlbayesian.AbstractBayesianStrategy & mlbayesian
                 p{iidx} = 1./(t*log(t(end)/t(1)));
                 p{iidx} = p{iidx}/sum(p{iidx});
             end
+            this.jeffreysPrior_ = p;
         end
-        function p = buildJeffreysPrior__(this)
+        function this = buildJeffreysPrior__(this)
             %% JEFFREYSPRIOR
             %  Cf. Gregory, Bayesian Logical Data Analysis for the Physical Sciences, sec. 3.7.1.
             
@@ -311,6 +336,34 @@ classdef AbstractMcmcStrategy < mlbayesian.AbstractBayesianStrategy & mlbayesian
                 p{iidx} = 1./(t*log(t(end)/t(1)));
                 p{iidx} = p{iidx}.*taus_/sum(p{iidx}.*taus_);
             end
+            this.jeffreysPrior_ = p;
+        end
+        function        plotParArgs(this, par, args, vars)
+            assert(lstrfind(par, properties(this)));
+            assert(iscell(args));
+            assert(isnumeric(vars));
+            figure
+            hold on
+            mdl = this.itsModel;
+            for v = 1:length(args)
+                argsv = args{v};
+                plot(0:length(mdl)-1, ...
+                     mlbayesian.AbstractMcmcStrategy.model(argsv{:}, this.times{1}));
+            end
+            plot(0:length(mdl)-1, this.dependentData{1}, 'o', 'LineWidth', 2);
+            title(sprintf(this.keysParamsForSprintf(argsv), argsv{:}));
+            legend(['bayes' ...
+                    cellfun(@(x) sprintf('%s = %g', par, x), num2cell(vars), 'UniformOutput', false)]);
+            xlabel('time sampling index');
+            ylabel(this.yLabel);
+        end
+        function s    = keysParamsForSprintf(this, argsv)
+            assert(length(argsv) == length(this.keyParams_));
+            s = '';
+            for a = 1:length(argsv)-1
+                s = [s this.keysParams_{a} ' %g, '];
+            end
+            s = [s this.keysParams_{end} ' %g'];
         end
     end
 

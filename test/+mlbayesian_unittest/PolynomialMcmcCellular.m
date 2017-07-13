@@ -8,6 +8,12 @@ classdef PolynomialMcmcCellular < mlbayesian.AbstractMcmcStrategy
  	%  and checked into repository /Users/jjlee/Local/src/mlcvl/mlbayesian/src/+mlbayesian.
  	%% It was developed on Matlab 8.5.0.197613 (R2015a) for MACI64.
     
+    methods (Static)        
+        function mdl  = model(varargin)
+            mdl = [];
+        end
+    end
+    
 	methods
         function this = PolynomialMcmcCellular(indDat, depDat)
             this = this@mlbayesian.AbstractMcmcStrategy(indDat, depDat);
