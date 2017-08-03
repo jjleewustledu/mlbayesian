@@ -16,6 +16,9 @@ classdef Test_GeneralizedGammaStrategy < matlab.unittest.TestCase
  	end
 
 	methods (Test)
+        function test_godo(this)
+            this.testObj = mlbayesian.GeneralizedGammaStrategy.godo;
+        end
 		function test_afun(this)
  			import mlbayesian.*;
  			this.assumeEqual(1,1);
@@ -25,8 +28,8 @@ classdef Test_GeneralizedGammaStrategy < matlab.unittest.TestCase
         function test_simulateItsMcmc(this)
             this.testObj.simulateItsMcmc;
         end
-        function test_doBayes(this)
-            this.testObj.doBayes;
+        function test_doItsBayes(this)
+            this.testObj.doItsBayes;
         end
         function test_plotParVars(this)
             this.testObj.plotParVars( ...

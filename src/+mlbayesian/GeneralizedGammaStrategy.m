@@ -4,11 +4,51 @@ classdef GeneralizedGammaStrategy < mlbayesian.AbstractMcmcStrategy
     %  https://en.wikipedia.org/wiki/Generalized_gamma_distribution
     %  N.B.  \rho(t; a,b,p) = \frac{p b^a}{\Gamma(a/p)} t^{a-1} e^{-(b t)^p} \text{ with } 1/b > 0, a > 0, p > 0, t > 0.
 
+    % Sample results:
+    % Running mlbayesian_unittest.Test_GeneralizedGammaStrategy
+    % annealing step 1 beta (1/temp) 2.040816e-02 logProb0 NaN
+    % annealing step 2 beta (1/temp) 4.081633e-02 logProb0 3.629935e+00
+    % annealing step 3 beta (1/temp) 6.122449e-02 logProb0 8.406637e+00
+    % annealing step 4 beta (1/temp) 8.163265e-02 logProb0 3.098795e+01
+    % annealing step 5 beta (1/temp) 1.020408e-01 logProb0 4.232267e+01
+    % annealing step 6 beta (1/temp) 1.224490e-01 logProb0 5.567121e+01
+    % annealing step 7 beta (1/temp) 1.428571e-01 logProb0 6.861425e+01
+    % annealing step 8 beta (1/temp) 1.632653e-01 logProb0 7.801523e+01
+    % annealing step 9 beta (1/temp) 1.836735e-01 logProb0 8.829775e+01
+    % annealing step 10 beta (1/temp) 2.040816e-01 logProb0 1.045470e+02
+    % 
+    % annealing step 10 param  a1 mean 8.007840	 std 3.705102	 sigma 0.567130	 acc 0.114000
+    % annealing step 10 param  b1 mean 0.340204	 std 0.109246	 sigma 0.023148	 acc 0.144000
+    % annealing step 10 param  p1 mean 1.000000	 std 0.000000	 sigma 0.999000	 acc 0.000000
+    % annealing step 10 param t01 mean 7.172316	 std 4.446294	 sigma 1.388889	 acc 0.163000
+    % annealing step 10 param  a2 mean 19.819439	 std 8.663353	 sigma 2.835648	 acc 0.161000
+    % annealing step 10 param  b2 mean 1.064188	 std 0.867900	 sigma 0.138889	 acc 0.205000
+    % annealing step 10 param  p2 mean 1.000000	 std 0.000000	 sigma 0.999000	 acc 0.000000
+    % annealing step 10 param t02 mean 2.827955	 std 2.441172	 sigma 4.018776	 acc 0.110000
+    % annealing step 10 param weight1 mean 0.810204	 std 0.099160	 sigma 0.120563	 acc 0.145000
+    % annealing step 10 param   S mean 0.000000	 std 0.000000	 sigma 0.100000	 acc 0.000000
+    % annealing step 10 param   k mean 0.000000	 std 0.000000	 sigma 1.000000	 acc 0.000000
+    % annealing step 10 param  t0 mean 40.000000	 std 0.000000	 sigma 10.000000	 acc 0.000000
+    % annealing step 50 beta (1/temp) 1.020408e+00 logProb0 6.349310e+02
+    % BEST-FIT    param  a1 value 4.187151
+    % BEST-FIT    param  b1 value 0.181447
+    % BEST-FIT    param  p1 value 1.000000
+    % BEST-FIT    param t01 value 6.014813
+    % BEST-FIT    param  a2 value 20.076335
+    % BEST-FIT    param  b2 value 0.714215
+    % BEST-FIT    param  p2 value 1.000000
+    % BEST-FIT    param t02 value 1.044547
+    % BEST-FIT    param weight1 value 0.582077
+    % BEST-FIT    param   S value 0.000000
+    % BEST-FIT    param   k value 0.000000
+    % BEST-FIT    param  t0 value 40.000000
+    
 	%  $Revision$
  	%  was created 27-Jun-2017 22:11:06 by jjlee,
  	%  last modified $LastChangedDate$ and placed into repository /Users/jjlee/Local/src/mlcvl/mlbayesian/src/+mlbayesian.
  	%% It was developed on Matlab 9.2.0.538062 (R2017a) for MACI64.  Copyright 2017 John Joowon Lee.
  	
+
 	properties 	
         a1  = 3.31
         b1  = 0.149
@@ -36,7 +76,7 @@ classdef GeneralizedGammaStrategy < mlbayesian.AbstractMcmcStrategy
     end
 
     methods (Static)
-        function [this,lg] = godo
+        function [this,lg] = doBayes
             this.filepath = fullfile(getenv('HOME'), 'Local', 'src', 'mlcvl', 'mlbayesian', 'data', '');
             cd(this.filepath);
             load('kernel6_span33_deg4.mat');
@@ -45,7 +85,7 @@ classdef GeneralizedGammaStrategy < mlbayesian.AbstractMcmcStrategy
             kernel = kernel(1:120);
             kernel = kernel/sum(kernel);
             this = mlbayesian.GeneralizedGammaStrategy({0:119}, {kernel'});
-            [this,lg] = this.doBayes;
+            [this,lg] = this.doItsBayes;
         end
         function        plotInitial
             this.filepath = fullfile(getenv('HOME'), 'Local', 'src', 'mlcvl', 'mlbayesian', 'data', '');
@@ -67,12 +107,13 @@ classdef GeneralizedGammaStrategy < mlbayesian.AbstractMcmcStrategy
             %r = mlbayesian.GeneralizedGammaTerms.gammaPair(a1, b1, t01, t02, weight1, t);
         end
         function this = simulateMcmc(a1, b1, p1, t01, a2, b2, p2, t02, weight1, S, k, t0, t, mapParams, keysParams)
-            rho = mlbayesian.GeneralizedGammaStrategy.rho( ...
-                            a1, b1, p1, t01, a2, b2, p2, t02, weight1, S, k, t0, t);
+            import mlbayesian.*;
+            rho = GeneralizedGammaStrategy.rho( ...
+                a1, b1, p1, t01, a2, b2, p2, t02, weight1, S, k, t0, t);
             this = GeneralizedGammaStratey({t}, {rho});
             this.mapParams = mapParams;
             this.keysParams_ = keysParams;
-            [this,lg] = this.doBayes;
+            [this,lg] = this.doItsBayes;
             fprintf('%s\n', char(lg));
         end
     end
@@ -135,21 +176,7 @@ classdef GeneralizedGammaStrategy < mlbayesian.AbstractMcmcStrategy
                     ps(theParams.paramsIndices('t01')) = tmp;
                 end
             end
-        end
-        function [this,lg] = doBayes(this)
-            tic          
-            
-            this = this.estimateParameters;
-            this.plotAll;
-            saveFigures(sprintf('fig_%s', this.fileprefix));
-            this.save;
-            lg = this.logging;
-            lg.save('w');   
-            fprintf('mlbayesian.GeneralizedGammaStrategy.doBayes:');
-            fprintf('%s\n', char(lg));                   
-            
-            toc
-        end   
+        end  
         function ed   = estimateDataFast(this, a1, b1, p1, t01, a2, b2, p2, t02, weight1, S, k, t0)
             %% ESTIMATEDATAFAST is used by AbstractBayesianStrategy.theSolver.
             
@@ -280,7 +307,6 @@ classdef GeneralizedGammaStrategy < mlbayesian.AbstractMcmcStrategy
     %% PROTECTED
     
     properties (Access = 'protected')
-        mapParams_
     end
 
 	%  Created with Newcl by John J. Lee after newfcn by Frank Gonzalez-Morphy

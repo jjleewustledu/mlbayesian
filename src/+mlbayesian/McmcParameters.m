@@ -8,23 +8,22 @@ classdef McmcParameters < mlbayesian.IMcmcParameters
  	%  and checked into repository /Users/jjlee/Local/src/mlcvl/mlbayesian/src/+mlbayesian.
  	%% It was developed on Matlab 8.5.0.197613 (R2015a) for MACI64.
  	
-    properties        
-        nProposals = 100   % number of loops in parameter prob phase
-        nPop       =  50   % number of population
-        nBeta      =  50   % number of temperature steps
-        nAnneal    =  20   % number of loops per annealing temp
-        nSamples
+    properties % must be in heap memory for speed
+        nProposals = 100 % number of proposals for importance sampling
+        nPop       =  50 % number of population for annealing/burn-in and proposal/sampling
+        nBeta      =  50 % number of temperature steps
+        nAnneal    =  20 % number of loops per annealing temp
+        nSamples         % numel of independentData     
         
+        fixed
+        fixedValue
+        min_
+        mean_        
+        max_
+        std_
     end
 
-	properties (Dependent)
-        fixed
-        min
-        mean        
-        max
-        std
-        fixedValue
-        
+	properties (Dependent)        
         indicesParams % parameter name to unique integer index
         keysParams    % parameter keys with cell ordering
         mapParams     % parameter name to mapped struct('fixed', 0, 'min', eps, 'mean', 1, 'max',  10)
@@ -35,27 +34,8 @@ classdef McmcParameters < mlbayesian.IMcmcParameters
     
     methods 
         
-        %% GET/SET
-        
-        function p = get.fixed(this)
-            p = this.fixed_;
-        end
-        function p = get.min(this)
-            p = this.min_;
-        end
-        function p = get.mean(this)
-            p = this.mean_;
-        end
-        function p = get.max(this)
-            p = this.max_;
-        end
-        function p = get.std(this)
-            p = this.std_;
-        end
-        function p = get.fixedValue(this)
-            p = this.fixedValue_;
-        end
-        
+        %% GET
+                
         function g    = get.indicesParams(this)
             g = this.indicesParams_;
         end
@@ -95,9 +75,8 @@ classdef McmcParameters < mlbayesian.IMcmcParameters
             
             this.mapParams_ = ip.Results.pmap; 
             this.nSamples = ip.Results.nsamples;
-            if (isempty(ip.Results.pkeys))
-                this.keysParams_ = this.mapParams_.keys; % ordering of keys will be alphanumeric, caps first
-            else
+            this.keysParams_ = this.mapParams_.keys; % ordering of keys will be alphanumeric, caps first
+            if (~isempty(ip.Results.pkeys))
                 this.keysParams_ = ip.Results.pkeys;
             end
             
@@ -106,17 +85,10 @@ classdef McmcParameters < mlbayesian.IMcmcParameters
             this.checkParams;
         end
     end
-    
+        
     %% PRIVATE
     
     properties (Access = 'private')
-        fixed_
-        min_
-        mean_
-        max_
-        std_
-        fixedValue_
-        
         indicesParams_
         keysParams_
         mapParams_
@@ -132,19 +104,19 @@ classdef McmcParameters < mlbayesian.IMcmcParameters
         end
         function this = buildProtectedProperties(this)
             keys = this.keysParams_;
-            this.fixed_      = zeros(length(keys), 1);
+            this.fixed      = false(length(keys), 1);
             this.min_        = zeros(length(keys), 1);
             this.mean_       = zeros(length(keys), 1);
             this.max_        = zeros(length(keys), 1);
             this.std_        = zeros(length(keys), 1);
-            this.fixedValue_ = zeros(length(keys), 1);
+            this.fixedValue = zeros(length(keys), 1);
             for k = 1:length(keys)
-                this.fixed_(k)      = this.mapParams_(keys{k}).fixed;
+                this.fixed(k)      = logical(this.mapParams_(keys{k}).fixed);
                 this.min_(k)        = this.mapParams_(keys{k}).min;
                 this.mean_(k)       = this.mapParams_(keys{k}).mean;
                 this.max_(k)        = this.mapParams_(keys{k}).max;
                 this.std_(k)        = this.paramsStd( keys{k});
-                this.fixedValue_(k) = this.paramsFixedValue(keys{k});
+                this.fixedValue(k) = this.paramsFixedValue(keys{k});
             end
         end
         function s    = paramsStd(this, key)

@@ -19,15 +19,15 @@ classdef (Abstract) IMcmcParameters
         indicesParams % parameter name to unique integer index
         
         fixed
-        min
-        mean
-        max
-        std
+        min_
+        mean_
+        max_
+        std_
         fixedValue
     end 
     
     methods (Abstract)        
-        length
+        length(this)
     end
 
 	%  Created with Newcl by John J. Lee after newfcn by Frank Gonzalez-Morphy

@@ -9,30 +9,33 @@ classdef (Abstract) IBayesianStrategy
  	%% It was developed on Matlab 8.5.0.197613 (R2015a) for MACI64.  Copyright 2015 John Joowon Lee. 
  	
     properties (Abstract)
-        xLabel
-        yLabel
         baseTitle
-        detailedTitle
-        
+        dependentData % cells, e.g., densities = f(time)
+        dependentDataInterp % cells, interpolated by this.NyquistFreq
+        dt % scalar := min(min(cell2mat(this.independentDeltas)))/this.NyquistFreqFactor
         independentData % cells, e.g., times
-        dependentData   % cells, e.g., densities = f(time)
-        sessionData     % mlpipeline.ISessionData
+        independentDataInterp % cells, interpolated by this.NyquistFreq
+        independentDeltas % repeats independentData(end) - independentData(end-1) so that 
+                          % length(independentDeltas) = length(independentData).
+        NyquistFreqFactor
+        sessionData
         theParameters
         theSolver
-        
-        expectedBestFitParams
-        bestFitParams
-        meanParams
-        stdParams
-        stdOfError
         verbosity
+        
+        taus             % synonym of independentDeltas
+        times            % synonym of independentData
+        timeFinal        % independentData(end)
+        timeInitial      % independentData(1)
+        timeInterpolants % synonym of independentDataInterp
+    end
+    
+    methods (Static, Abstract)
+        load
     end
     
     methods (Abstract)
-        estimateParameters(this)
-        estimateData(this)
-        estimateDataFast(this)        
-        plot(this)
+        save(this)
     end
 
 	%  Created with Newcl by John J. Lee after newfcn by Frank Gonzalez-Morphy

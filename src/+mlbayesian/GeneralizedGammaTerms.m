@@ -90,8 +90,8 @@ classdef GeneralizedGammaTerms
                 rho = tau.^(a-1) .* exp(-(b*tau).^p);
                 rho = mlbayesian.AbstractBayesianStrategy.slide(rho, t, t0 - t(1));
             end
-            rho = rho/sum(abs(rho));
-            %rho = rho*p*b^a/gamma(a/p);
+            rho = rho/trapz(t, abs(rho));
+            %rho = rho*p*b^a/gamma(a/p); % valid for t \rightarrow \infty
         end
         function rho = gammaTermR(a, b, t0, t)
             if (t(1) >= t0) % saves extra flops from slide(), \int dt rho(t) < 1
@@ -102,8 +102,8 @@ classdef GeneralizedGammaTerms
                 rho = tau.^(a-1) .* exp(-b*tau);
                 rho = mlbayesian.AbstractBayesianStrategy.slide(rho, t, t0 - t(1));
             end
-            rho = rho/sum(rho);
-            %rho = rho*b^a/gamma(a);
+            rho = rho/trapz(t, rho);
+            %rho = rho*b^a/gamma(a); % valid for t \rightarrow \infty
         end
     end
 

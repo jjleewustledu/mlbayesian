@@ -57,10 +57,10 @@ classdef McmcCellular < mlbayesian.IMCMC
     
     methods %% GET/SET
         function n = get.parameters(this)
-            n = this.mcmcStrategy_.theParameters;
+            n = this.parameters_;
         end
         function n = get.nParams(this)
-            n = this.parameters.length;
+            n = length(this.parameters);
         end
         function n = get.nProposals(this)
             n = this.parameters.nProposals;
@@ -110,7 +110,8 @@ classdef McmcCellular < mlbayesian.IMCMC
             addRequired(p, 'mcmcStrat', @(x) isa(x, 'mlbayesian.IMcmcStrategy'));
             parse(p, mcmcStrat);
             
-            this.mcmcStrategy_     = p.Results.mcmcStrat;    
+            this.mcmcStrategy_     = p.Results.mcmcStrat;
+            this.parameters_       = this.mcmcStrategy_.theParameters; % cached for speed
             this.paramsBetas       = zeros(this.nParams, this.nBeta);  
             this.paramsPopulations = zeros(this.nParams, this.nPop);   
             this.paramsSigmas      = zeros(this.nParams, 1);  
@@ -132,14 +133,14 @@ classdef McmcCellular < mlbayesian.IMCMC
             if (this.verbosity > eps)
                 fprintf('mlbayesian.McmcCellular.ctor:  initializing McmcCellular'); end
             for m = 1:this.nPop
-                this.paramsSigmas = (this.parameters.max - this.parameters.min)/10.0;
+                this.paramsSigmas = (this.parameters.max_ - this.parameters.min_)/10.0;
                 for k = 1:this.nParams
                     if (this.parameters.fixed(k))
                         this.paramsPopulations(k,m) = this.parameters.fixedValue(k);
                     else
-                        this.paramsPopulations(k,m) = this.parameters.mean(k) + this.parameters.std(k)*randn(1,1);
-                        while (this.paramsPopulations(k,m)<this.parameters.min(k) || this.paramsPopulations(k,m)>this.parameters.max(k))
-                            this.paramsPopulations(k,m) = this.parameters.mean(k) + this.parameters.std(k)*randn(1,1);
+                        this.paramsPopulations(k,m) = this.parameters.mean_(k) + this.parameters.std_(k)*randn(1,1);
+                        while (this.paramsPopulations(k,m)<this.parameters.min_(k) || this.paramsPopulations(k,m)>this.parameters.max_(k))
+                            this.paramsPopulations(k,m) = this.parameters.mean_(k) + this.parameters.std_(k)*randn(1,1);
                         end
                     end
                 end
@@ -182,7 +183,7 @@ classdef McmcCellular < mlbayesian.IMCMC
                                 while (nprop < this.MAX_PROP)
                                     nprop = nprop + 1;
                                     dpar = this.paramsSigmas(k)*randn(1,1);
-                                    if (ptmp(k)+dpar>=this.parameters.min(k) && ptmp(k)+dpar<=this.parameters.max(k)) 
+                                    if (ptmp(k)+dpar>=this.parameters.min_(k) && ptmp(k)+dpar<=this.parameters.max_(k)) 
                                         break; 
                                     end
                                 end
@@ -244,7 +245,7 @@ classdef McmcCellular < mlbayesian.IMCMC
                             while (nprop < this.MAX_PROP)
                                 nprop = nprop + 1;
                                 dpar = this.paramsSigmas(k)*randn(1,1);
-                                if (ptmp(k)+dpar>=this.parameters.min(k) && ptmp(k)+dpar<=this.parameters.max(k)) 
+                                if (ptmp(k)+dpar>=this.parameters.min_(k) && ptmp(k)+dpar<=this.parameters.max_(k)) 
                                     break; 
                                 end
                             end
@@ -318,8 +319,8 @@ classdef McmcCellular < mlbayesian.IMCMC
             % add in beta and pretest probabilities
             if (lpFlag == 1)
                 % beta only operates on likelihoods
-                args  = this.PARPEN - (paramsVec - this.parameters.mean).^2 ./ (2 * this.parameters.std.^2);
-                args  = double(~this.parameters.fixed) .* args;
+                args  = this.PARPEN * ones(size(paramsVec)) - (paramsVec - this.parameters.mean_).^2 ./ (2 * this.parameters.std_.^2);
+                args  = args(this.parameters.fixed);
                 lprob = beta_ * lprob + sum(args);
             end
         end
@@ -382,7 +383,7 @@ classdef McmcCellular < mlbayesian.IMCMC
             xlabel('beta (1/temp)');
             ylabel('log(prob)');
         end
-        function histParametersDistributions(this)
+        function histParametersDistributions__(this)
             
             % histogram sampling phase
             % histogram parameter distribution
@@ -392,6 +393,27 @@ classdef McmcCellular < mlbayesian.IMCMC
                 subplot(N, N, double(k));
                 hist(this.paramsHist(k,:), this.NBINS);
                 xlabel(['Parameter ', this.paramIndexToLabel(k)]);
+            end
+        end
+        function histParametersDistributions(this)
+            
+            % histogram sampling phase
+            % histogram parameter distribution
+            figure;
+            Np = double(this.nParams);
+            for m = 1:Np % rows
+            for n = 1:Np % cols
+                subplot(Np, Np, double(n + double(m-1)*Np));
+                hold on;
+                dat = [this.paramsHist(n,:)', this.paramsHist(m,:)'];
+                hn  = hist3(dat, [this.NBINS, this.NBINS]);
+                xb  = linspace(min(dat(:,1)), max(dat(:,1)), size(hn,1));
+                yb  = linspace(min(dat(:,2)), max(dat(:,2)), size(hn,1));
+                pcolor(xb, yb, hn);
+                shading('flat');
+                set(gca, 'YDir', 'Reverse');
+                xlabel(sprintf('%s x %s', this.paramIndexToLabel(m), this.paramIndexToLabel(n)));
+            end
             end
         end
         function plotLogProbabilityQC(this)
@@ -417,6 +439,7 @@ classdef McmcCellular < mlbayesian.IMCMC
     
     properties (Access = 'private')
         mcmcStrategy_
+        parameters_
     end
     
     methods (Access = 'private')
@@ -489,9 +512,9 @@ classdef McmcCellular < mlbayesian.IMCMC
                         this.paramsSigmas(k) = 1.1*this.paramsSigmas(k);
                     end
                 end
-                if (this.paramsSigmas(k) > (this.parameters.max(k) - this.parameters.min(k)))
+                if (this.paramsSigmas(k) > (this.parameters.max_(k) - this.parameters.min_(k)))
                     warning('mlbayesian:parameterOutOfBounds', 'McmcCellular.paramsSigmas(%i) too large\n', k);
-                    this.paramsSigmas(k) =  this.parameters.max(k) - this.parameters.min(k);
+                    this.paramsSigmas(k) =  this.parameters.max_(k) - this.parameters.min_(k);
                 end           
             end  
         end
@@ -499,8 +522,8 @@ classdef McmcCellular < mlbayesian.IMCMC
             for k = 1:this.nPopRep
                 lpmax = -Inf;
                 lpmin =  Inf;
-                ilpmax = NaN;
-                ilpmin = NaN;
+                ilpmax = 0;
+                ilpmin = 0;
                 for m = 1:this.nPop
                     if (this.lpPopulations(m) == 0.0) 
                         continue; 
@@ -516,9 +539,6 @@ classdef McmcCellular < mlbayesian.IMCMC
                 end
                 
                 %% assure that these are not repeated
-                if (isnan(ilpmin) || isnan(ilpmax))
-                    continue
-                end
                 this.lpPopulations(ilpmin) = 0.0;
                 this.lpPopulations(ilpmax) = 0.0;
                 this.paramsPopulations(:,ilpmin) = this.paramsPopulations(:,ilpmax);

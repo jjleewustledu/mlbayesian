@@ -8,50 +8,64 @@ classdef IMcmcStrategy
  	%  and checked into repository /Users/jjlee/Local/src/mlcvl/mlbayesian/src/+mlbayesian.
  	%% It was developed on Matlab 8.5.0.197613 (R2015a) for MACI64.  Copyright 2015 John Joowon Lee. 
  	
-	properties (Abstract)
+	properties (Abstract)        
+        cost
+        mapParams
         showAnnealing
         showBeta
-        showPlots % boolean
-        
-        dt
-        taus             % times(2) - times(1), times(3) - times(2), ...
-        times            % synonym of independentData
-        timeFinal        % independentData(end)
-        timeInitial      % independentData(1)
-        timeInterpolants % timeInitial:dt:timeFinal
-        
-        nParams
-        nProposals % number of loops in parameter prob phase
-        nPop       % number of population
-        nPopRep    % number of population to replace 
-        nBeta      % number of temperature steps
-        nAnneal    % number of loops per annealing temp
-        nSamples
-        nProposalsQC    
+        showBestFit
+        showFinalStats
+        showPlots        
         
         annealingAvpar
-        annealingSdpar
         annealingInitz
+        annealingSdpar        
+        bestFitParams
+        expectedBestFitParams
+        meanParams
+        stdParams
+        stdOfError 
+        
+        nParams
+        nProposals % number of proposals for importance sampling, default 100
+        nPop       % number of population for annealing/burn-in and proposal/sampling, default 50
+        nPopRep    % number of population to replace, default nPop/10
+        nBeta      % number of temperature steps, default 50; incr. for more precisions
+        nAnneal    % number of loops per annealing temp, default 20; incr. for more precisions
+        nSamples   % numel of this.independentData
+        nProposalsQC  
  	end 
 
 	methods (Abstract) 
-        adjustParams(this) 
-        ensureKeyOrdering(this)
-        finalMeans(this)
-        finalParams(this)
-        finalStds(this)               
-        histParametersDistributions(this)
-        histStdOfError(this)
-        length(this) % of dependent_data = f(time_interpolants), which must have the same array sizes        
-        normalizedQ(this)
-        plotAnnealing(this)
-        plotLogProbabilityQC(this) 
-        printBestFit(this)
-        printFinalStats(this)
-        printQNQ(this)
-        Q(this)  
-        runMcmc(this)  
-        sumSquaredErrors(this, p)     
+        this = adjustN(this, kind, n)
+        ps   = adjustParams(~, ps)
+               disp(this)
+               dispMapParams(this)
+               ensureKeyOrdering(this, currentKeys)
+        ed   = estimateData(this)
+        edf  = estimateDataFast(this)
+        this = estimateParameters(this, varargin)
+        
+        x    = finalMeans(this)
+        x    = finalParams(this)
+        x    = finalStds(this)               
+               histParametersDistributions(this)
+               histStdOfError(this)
+        mdl  = itsModel(this)
+        len  = length(this)
+        nq   = normalizedQ(this)
+               plot(~, varargin)
+               plotAll(this)
+               plotAnnealing(this)
+               plotLogProbabilityQC(this)
+               plotParVars(~, varargin)
+               printBestFit(this)
+               printFinalStats(this)
+               printQNQ(this)
+        q    = Q(this)  
+        this = runMcmc(this)  
+        this = simulateItsMcmc(this)
+        sse  = sumSquaredErrors(this, p)     
     end
 
 	%  Created with Newcl by John J. Lee after newfcn by Frank Gonzalez-Morphy
