@@ -18,8 +18,8 @@ classdef ConvolutionModel < mlanalysis.NullModel
         sT = 1
         sU = 1
         
-        fixed = false(1,3)
-        fixedValue = nan(1,3)
+        fixed = false(3,1)
+        fixedValue = nan(3,1)
     end
     
     methods (Static)
@@ -32,10 +32,10 @@ classdef ConvolutionModel < mlanalysis.NullModel
 	methods 
 		  
         function ps   = modelParameters(this)
-            ps = [this.A this.T this.U];
+            ps = [this.A; this.T; this.U];
         end
         function sps  = modelStdParameters(this)
-            sps = [this.sA this.sT this.sU];
+            sps = [this.sA; this.sT; this.sU];
         end
         function this = doConstructGenerative(this)
             idata = this.t0:this.dt:this.tfinal; 
@@ -91,11 +91,11 @@ classdef ConvolutionModel < mlanalysis.NullModel
             %  nProposals = 100, number of proposals for importance sampling
             %  nSamples   is numeric, numel of independentData
             
-            ps = this.modelParameters;
-            sps = this.modelStdParameters;
+            ps = ensureColVector(this.modelParameters);
+            sps = ensureColVector(this.modelStdParameters);
             ps = struct( ...
-                'fixed',      this.fixed, ...
-                'fixedValue', this.fixedValue, ...
+                'fixed',      ensureColVector(this.fixed), ...
+                'fixedValue', ensureColVector(this.fixedValue), ...
                 'min_',       ps - this.M*sps, ...
                 'mean_',      ps, ...
                 'max_',       ps + this.M*sps, ... 

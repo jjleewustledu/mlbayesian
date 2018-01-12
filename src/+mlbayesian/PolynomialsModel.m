@@ -16,10 +16,10 @@ classdef PolynomialsModel < mlanalysis.NullModel
         t0 = 0;
         dt = 1;
         tfinal = 10;
-        as = [1 .1 .01 .001] % expected polynomial coefficients
-        sas = [1 .1 .01 .001] % std used for annealing        
-        fixed = false(1,4)
-        fixedValue = nan(1,4)
+        as = [1; .1; .01; .001] % expected polynomial coefficients
+        sas = [1; .1; .01; .001] % std used for annealing        
+        fixed = false(4,1)
+        fixedValue = nan(4,1)
     end
     
     methods (Static)
@@ -39,6 +39,7 @@ classdef PolynomialsModel < mlanalysis.NullModel
                 return
             end
             g = this.as - this.M*this.sas;
+            g = ensureColVector(g);
         end
         function this = set.asMin(this, s)
             assert(isnumeric(s));
@@ -51,6 +52,7 @@ classdef PolynomialsModel < mlanalysis.NullModel
                 return
             end
             g = this.as + this.M*this.sas;
+            g = ensureColVector(g);
         end
         function this = set.asMax(this, s)
             assert(isnumeric(s));
@@ -61,10 +63,10 @@ classdef PolynomialsModel < mlanalysis.NullModel
         %%
 		  
         function ps   = modelParameters(this)
-            ps = this.as;
+            ps = ensureColVector(this.as);
         end
         function sps  = modelStdParameters(this)
-            sps = this.sas;
+            sps = ensureColVector(this.sas);
         end
         function this = doConstructGenerative(this)
             idata = this.t0:this.dt:this.tfinal;  
@@ -126,8 +128,8 @@ classdef PolynomialsModel < mlanalysis.NullModel
             %  nSamples   is numeric, numel of independentData
             
             ps = struct( ...
-                'fixed',      this.fixed, ...
-                'fixedValue', this.fixedValue, ...
+                'fixed',      ensureColVector(this.fixed), ...
+                'fixedValue', ensureColVector(this.fixedValue), ...
                 'min_',       this.asMin, ...
                 'mean_',      this.modelParameters, ...
                 'max_',       this.asMax, ... 

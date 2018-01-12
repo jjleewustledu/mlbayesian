@@ -320,7 +320,7 @@ classdef McmcCellular < mlbayesian.IMCMC
             if (lpFlag == 1)
                 % beta only operates on likelihoods
                 args  = this.PARPEN * ones(size(paramsVec)) - (paramsVec - this.parameters.mean_).^2 ./ (2 * this.parameters.std_.^2);
-                args  = args(this.parameters.fixed);
+                args  = args(~this.parameters.fixed);
                 lprob = beta_ * lprob + sum(args);
             end
         end

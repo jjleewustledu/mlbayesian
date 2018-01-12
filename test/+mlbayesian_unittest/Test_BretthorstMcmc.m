@@ -21,10 +21,10 @@ classdef Test_BretthorstMcmc < matlab.unittest.TestCase
 		function test_linear(this)
             import mlbayesian.*;
             mdl = PolynomialsModel;
-            mdl.as  = [1 1 0 0];
-            mdl.sas = [1 1 0 0];
-            mdl.fixed = logical([0 0 1 1]);
-            mdl.fixedValue = [0 0 0 0];
+            mdl.as  = [1 1 0 0]';
+            mdl.sas = [1 1 0 0]';
+            mdl.fixed = logical([0 0 1 1]');
+            mdl.fixedValue = [0 0 0 0]';
             mdl = mdl.doConstructGenerative; % generate dependentData using as, sas, fixed, fixedValue listed above
             this.testObj.model = mdl;
             this.testObj = this.testObj.estimateParameters;
@@ -42,18 +42,18 @@ classdef Test_BretthorstMcmc < matlab.unittest.TestCase
             
             import mlbayesian.*;
             mdl = PolynomialsModel('independentData', t, 'dependentData', y);
-            mdl.as  = [1 1 1 0]; % differing initial conditions; don't run do ConstructGenerative; compare to Test_McmcCellular
-            mdl.sas = [1 1 1 0];
-            mdl.asMin = [0 0 0 0];
-            mdl.asMax = [10 10 10 0];
-            mdl.fixed = logical([0 0 0 1]);
-            mdl.fixedValue = [1 1 1 0];
+            mdl.as  = [1 1 1 0]'; % differing initial conditions; don't run do ConstructGenerative; compare to Test_McmcCellular
+            mdl.sas = [1 1 1 0]';
+            mdl.asMin = [0 0 0 0]';
+            mdl.asMax = [10 10 10 0]';
+            mdl.fixed = logical([0 0 0 1]');
+            mdl.fixedValue = [1 1 1 0]';
             this.testObj.model = mdl;
             this.testObj = this.testObj.estimateParameters;
             this.testObj.diagnose;
             this.verifyTrue( this.testObj.isfinished);
-            this.verifyEqual(this.testObj.model.modelParameters, [1 2 3 0], 'RelTol', 1e-4);
-            this.verifyEqual(this.testObj.model.objectiveFunc, 0, 'AbsTol', 1e-5);
+            this.verifyEqual(this.testObj.model.modelParameters, [1 2 3 0]', 'RelTol', 1e-4);
+            this.verifyEqual(this.testObj.model.objectiveFunc, 0, 'AbsTol', 1e-7);
             this.verifyEqual(this.testObj.model.fqfilename, fullfile(this.home, 'mlbayesian_PolynomialsModel.mat'));
         end
 		function test_polynomials(this)

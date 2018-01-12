@@ -50,9 +50,15 @@ classdef McmcKernel
             %  @param mcmcStruct is a struct
             
             assert(isstruct(mcmcs));
-            this.mcmcStruct_         = mcmcs;   
-            this.paramsPenalty_      = this.mcmcStruct_.paramsPenalty;         
-            this.paramsStruct_       = this.mcmcStruct_.solverParameters; % another struct, cached for speed
+            this.mcmcStruct_    = mcmcs;   
+            this.paramsPenalty_ = this.mcmcStruct_.paramsPenalty;         
+            this.paramsStruct_  = this.mcmcStruct_.solverParameters; % another struct, cached for speed
+            
+            % problems here affect replacePoorMembers, logProbability
+            assert(all(size(this.paramsStruct_.mean_)      == [this.nParams 1])); 
+            assert(all(size(this.paramsStruct_.std_)       == [this.nParams 1]));
+            assert(all(size(this.paramsStruct_.fixed)      == [this.nParams 1]));
+            assert(all(size(this.paramsStruct_.fixedValue) == [this.nParams 1]));
             
             this.annealingAvpar    = zeros(this.nParams, 1);
             this.annealingSdpar    = zeros(this.nParams, 1);
@@ -321,13 +327,20 @@ classdef McmcKernel
             % add in beta and pretest probabilities
             if (lpFlag == 1)
                 % beta only operates on likelihoods
+%                 m_    = this.paramsStruct_.mean_;
+%                 s_    = this.paramsStruct_.std_;
+%                 pv_   = paramsVec;
+%                 args  = this.paramsPenalty_ - (pv_ - m_).^2 ./ (2 * s_.^2);
+%                 args  = args(~this.paramsStruct_.fixed);
+%                 lprob = beta_*lprob + sum(args);
+                
                 len   = length(paramsVec);
-                m_    = ones(len,1)*this.paramsStruct_.mean_;
-                s_    = ones(len,1)*this.paramsStruct_.std_;
-                pv_   = paramsVec*ones(1,len);
-                args  = this.paramsPenalty_ - (pv_ - m_).^2 ./ (2 * s_.^2);
-                args  = args(this.paramsStruct_.fixed);
-                lprob = beta_ * lprob + sum(args);
+                lprob = beta_ * lprob;
+                for f = 1:len
+                   if (~this.paramsStruct_.fixed(f))
+                       lprob = lprob + this.paramsPenalty_ - (paramsVec(f) - this.paramsStruct_.mean_(f))^2/(2.0*this.paramsStruct_.std_(f)^2);
+                   end
+                end
             end
         end
         function fprintf(this)
