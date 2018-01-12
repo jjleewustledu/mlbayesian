@@ -15,7 +15,7 @@ classdef McmcCellular < mlbayesian.IMCMC
         FRACPEEK    =  0.2
         PARPEN      =  0.0 % -1.0 % minimal penalty for each param (unused)
         MAX_PROP    = 50
-        FRAC_POPREP = 0.1
+        FRAC_POPREP =  0.1
     end
     
     properties
@@ -313,7 +313,7 @@ classdef McmcCellular < mlbayesian.IMCMC
                 return
             end
 
-            % use log t-distribution for parameter degrees of freedom
+            % use log t-distribution for parameter degrees of freedom; after Lee 2010 eqn 10
             lprob = -0.5*this.nSamples*log(0.5*lprob);
 
             % add in beta and pretest probabilities

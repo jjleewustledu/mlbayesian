@@ -242,10 +242,10 @@ classdef AbstractMcmcStrategy < mlbayesian.AbstractBayesianStrategy & mlbayesian
         end        
         function this = runMcmc(this, varargin)
             %% RUNMCMC should be run from within method estimateParameters, implemented as described below.
-            %  @params mapParams is a containers.Map with parameter keys & values
-            %  @params named keysParams is a cell array enumerating param keys to be checked for equivalence with
+            %  @param mapParams is a containers.Map with parameter keys & values
+            %  @param named keysParams is a cell array enumerating param keys to be checked for equivalence with
             %  mapParams.keys
-            %  @params named mcmcParameters may be assigned in mlbayesian.AbstractBayesianStrategy.ctor,
+            %  @param named mcmcParameters may be assigned in mlbayesian.AbstractBayesianStrategy.ctor,
             %  by direct assignment of this.theParameters or here; reasonable defaults are used otherwise.
             %  Usage:  map = containers.Map
             %          map('some_param') = struct('fixed', 0, 'min', eps, 'mean', 1, 'max',  10)

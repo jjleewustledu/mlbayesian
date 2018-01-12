@@ -295,8 +295,8 @@ classdef GeneralizedGammaStrategy < mlbayesian.AbstractMcmcStrategy
 		  
  		function this = GeneralizedGammaStrategy(varargin)
  			%% GENERALIZEDGAMMASTRATEGY
- 			%  @params independentData is cell.
-            %  @params dependentData is cell.
+ 			%  @param independentData is cell.
+            %  @param dependentData is cell.
             %  @returns this.
 
  			this = this@mlbayesian.AbstractMcmcStrategy(varargin{:}); 

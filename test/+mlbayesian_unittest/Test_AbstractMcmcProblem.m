@@ -67,7 +67,7 @@ classdef Test_AbstractMcmcProblem < matlab.unittest.TestCase
             len = min(length(dta.timeInterpolants), length(tsc.timeInterpolants));
             timeInterp = tsc.timeInterpolants(1:len);
             Ca = dta.countInterpolants(1:len);
-            Q = tsc.becquerelInterpolants(1:len);            
+            Q = tsc.activityInterpolants(1:len);            
             figure; plot(timeInterp, Ca, timeInterp, Q)
             
             kmp = mlbayesian_unittest.Kinetics4McmcProblem( ...
@@ -93,7 +93,7 @@ classdef Test_AbstractMcmcProblem < matlab.unittest.TestCase
             len = min(dta.scanDuration, tsc.scanDuration);
             timeInterp = tsc.timeInterpolants(1:len);
             Ca = dta.countInterpolants(1:len);
-            Q = tsc.becquerelInterpolants(1:len);            
+            Q = tsc.activityInterpolants(1:len);            
             figure; plot(timeInterp, Ca, timeInterp, Q)
             
             kmp = mlbayesian_unittest.Kinetics3McmcProblem( ...

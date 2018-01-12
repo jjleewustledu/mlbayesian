@@ -33,7 +33,7 @@ classdef Test_McmcCellular < matlab.unittest.TestCase
                 'NyquistFreqFactor', 8);
             tic; pmc = pmc.estimateParameters; toc
             y1 = pmc.estimateData;            
-            this.verifyEqual(y1{1}, y, 'RelTol', 5e-8);
+            this.verifyEqual(y1{1}, y, 'RelTol', 5e-5);
             this.verifyEqual(pmc.dt, 1/8, 'AbsTol', eps);
             this.verifyEqual(length(pmc.independentData{1}), 21);
             this.verifyEqual(length(pmc.dependentData{1}),   21);
