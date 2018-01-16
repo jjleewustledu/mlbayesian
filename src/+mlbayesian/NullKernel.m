@@ -6,7 +6,7 @@ classdef NullKernel
  	%  last modified $LastChangedDate$ and placed into repository /Users/jjlee/Local/src/mlcvl/mlbayesian/src/+mlbayesian.
  	%% It was developed on Matlab 9.3.0.713579 (R2017b) for MACI64.  Copyright 2018 John Joowon Lee.
  	
-	properties 		
+	properties
         independentData
  		dependentData
  	end
@@ -22,6 +22,7 @@ classdef NullKernel
     end 
 
 	methods 
+        
         function ed = estimateData(this, varargin)
             %% ESTIMATEDATA
             %  @returns ed, the estimated data isomorphic to this.dependentData.
@@ -47,7 +48,7 @@ classdef NullKernel
  			this.independentData = idata;	
  			this.dependentData   = ddata;
  		end
- 	end 
+    end 
 
 	%  Created with Newcl by John J. Lee after newfcn by Frank Gonzalez-Morphy
  end

@@ -8,10 +8,12 @@ classdef BretthorstMcmc < mlbayesian.IMcmcSolver & mlio.AbstractIO
  	
     properties        
         nBinsHist = 100 % nbins for hist
+        showAnnealing = true
+        showBeta = true
     end
     
 	properties (Dependent)		
- 		constructGenerative 
+ 		useSynthetic 
         isfinished
         kernel
         model
@@ -21,8 +23,8 @@ classdef BretthorstMcmc < mlbayesian.IMcmcSolver & mlio.AbstractIO
         
         %% GET/SET
         
-        function g = get.constructGenerative(this)
-            g = this.model.constructGenerative;
+        function g = get.useSynthetic(this)
+            g = this.model.useSynthetic;
         end
         function g = get.isfinished(this)
             g = this.kernel.isfinished;
@@ -34,10 +36,10 @@ classdef BretthorstMcmc < mlbayesian.IMcmcSolver & mlio.AbstractIO
             g = this.model_;
         end
         
-        function this = set.constructGenerative(this, s)
+        function this = set.useSynthetic(this, s)
             assert(islogical(s));
             assert(~isempty(this.model));
-            this.model.constructGenerative = s;
+            this.model.useSynthetic = s;
         end
         function this = set.model(this, s)
             assert(isa(s, 'mlanalysis.IModel'));
@@ -62,8 +64,8 @@ classdef BretthorstMcmc < mlbayesian.IMcmcSolver & mlio.AbstractIO
             this.mcmcStruct_ = struct( ...
                 'solverParameters', this.model_.solverParameters, ...
                 'paramsPenalty', 0, ...
-                'showAnnealing', true, ...
-                'showBeta', true, ...
+                'showAnnealing', this.showAnnealing, ...
+                'showBeta', this.showBeta, ...
                 'verbosity', 0, ...
                 'adjustParams', @this.adjustParams__, ...
                 'objectiveFunc', @this.objectiveFunc__, ...
@@ -152,7 +154,7 @@ classdef BretthorstMcmc < mlbayesian.IMcmcSolver & mlio.AbstractIO
  			%% BRETTHORSTMCMC
             
             ip = inputParser;
-            addParameter(ip, 'model', mlanalysis.NullModel, @(x) isa(x, 'mlanalysis.IModel'));
+            addParameter(ip, 'model', mlanalysis.NullModel('solverClass', class(this)), @(x) isa(x, 'mlanalysis.IModel'));
             addParameter(ip, 'datedFilename', true, @islogical);
             parse(ip, varargin{:});
             this.model = ip.Results.model;  

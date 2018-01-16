@@ -68,39 +68,27 @@ classdef PolynomialsModel < mlanalysis.NullModel
         function sps  = modelStdParameters(this)
             sps = ensureColVector(this.sas);
         end
-        function this = doConstructGenerative(this)
+        function this = constructSyntheticKernel(this)
             idata = this.t0:this.dt:this.tfinal;  
             ddata = mlbayesian.PolynomialsKernel.polynomial(this.as, idata);
             this.kernel_ = mlbayesian.PolynomialsKernel(idata, ddata);
+        end
+        function this = constructKernelWithData(this)
+            this.kernel_ = mlbayesian.PolynomialsKernel( ...
+                this.independentData, this.dependentData);
         end
         
  		function this = PolynomialsModel(varargin)
  			%% POLYNOMIALSMODEL
             %  @param independentData is numeric, defaults to this.t0:this.dt:this.tfinal.
             %  @param dependentData   is numeric, defaults to generative model.
-            %  @param constructGenerative is logical; forces dependentData := generative model if true.
+            %  @param useSynthetic    is logical; forces dependentData := generative model if true.
             %  @returns mlanalysis.IModel solvable by mlanalysis.ISolver implementations.
             
-            this = this@mlanalysis.NullModel(varargin{:});            
-            if (this.constructGenerative || ...
-                    all(isempty(this.independentData) || all(isempty(this.dependentData))))
-                this = this.doConstructGenerative;
-            else                          
-                this.kernel_ = mlbayesian.PolynomialsKernel( ...
-                    this.independentData, this.dependentData);
-            end
-            
-            assert(ischar(this.parameterIndexToName(length(this.modelParameters))), ... 
-                'mismatched lengths of parameterIndexToName and modelParameters');
-            
-            %% for mlio.AbstractIO
-            
-            this.filepath_ = pwd;
-            this.fileprefix_ = strrep(class(this), '.', '_');
-            if (this.datedFilename_)
-                this.fileprefix_ = [this.fileprefix_ '_' datestr(now, 30)];
-            end
-            this.filesuffix_ = '.mat';
+            this = this@mlanalysis.NullModel(varargin{:}); 
+            this = this.setupKernel;        
+            this = this.setupFilesystem;
+            this = this.checkModel;
  		end
     end      
 

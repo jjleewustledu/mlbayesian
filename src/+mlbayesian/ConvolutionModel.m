@@ -37,45 +37,33 @@ classdef ConvolutionModel < mlanalysis.NullModel
         function sps  = modelStdParameters(this)
             sps = [this.sA; this.sT; this.sU];
         end
-        function this = doConstructGenerative(this)
+        function this = constructSyntheticKernel(this)
             idata = this.t0:this.dt:this.tfinal; 
             ddata = mlbayesian.ConvolutionKernel.convolution(this.modelParameters, idata);
             this.kernel_ = mlbayesian.ConvolutionKernel(idata, ddata);
+        end
+        function this = constructKernelWithData(this)
+            this.kernel_ = mlbayesian.ConvolutionKernel( ...
+                this.independentData, this.dependentData);
         end
         
  		function this = ConvolutionModel(varargin)
  			%% CONVOLUTIONMODEL
             %  @param independentData is numeric, defaults to this.t0:this.dt:this.tfinal.
             %  @param dependentData   is numeric, defaults to generative model.
-            %  @param constructGenerative is logical; forces dependentData := generative model if true.
+            %  @param useSynthetic    is logical; forces dependentData := generative model if true.
             %  @returns mlanalysis.IModel solvable by mlanalysis.ISolver implementations.
             
             this = this@mlanalysis.NullModel(varargin{:});
-            if (this.constructGenerative || ...
-                    all(isempty(this.independentData) || all(isempty(this.dependentData))))
-                this = this.doConstructGenerative;
-            else 
-                this.kernel_ = mlbayesian.ConvolutionKernel( ...
-                    this.independentData, this.dependentData);
-            end            
-            
-            assert(ischar(this.parameterIndexToName(length(this.modelParameters))), ... 
-                'mismatched lengths of parameterIndexToName and modelParameters');
-            
-            %% for mlio.AbstractIO
-            
-            this.filepath_ = pwd;
-            this.fileprefix_ = strrep(class(this), '.', '_');
-            if (this.datedFilename_)
-                this.fileprefix_ = [this.fileprefix_ '_' datestr(now, 30)];
-            end
-            this.filesuffix_ = '.mat';
+            this = this.setupKernel;                       
+            this = this.setupFilesystem;
+            this = this.checkModel;
  		end
     end 
     
     %% PROTECTED  
     
-    methods (Access = protected)
+    methods (Access = protected)  
         function ps   = mcmcParameters(this)
             %% MCMCPARAMETERS must be in heap memory for speed
             %  @return struct containing:

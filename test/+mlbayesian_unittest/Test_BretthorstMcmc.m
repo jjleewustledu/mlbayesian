@@ -25,7 +25,7 @@ classdef Test_BretthorstMcmc < matlab.unittest.TestCase
             mdl.sas = [1 1 0 0]';
             mdl.fixed = logical([0 0 1 1]');
             mdl.fixedValue = [0 0 0 0]';
-            mdl = mdl.doConstructGenerative; % generate dependentData using as, sas, fixed, fixedValue listed above
+            mdl = mdl.constructSyntheticKernel; % generate dependentData using as, sas, fixed, fixedValue listed above
             this.testObj.model = mdl;
             this.testObj = this.testObj.estimateParameters;
             this.testObj.diagnose;
@@ -50,7 +50,7 @@ classdef Test_BretthorstMcmc < matlab.unittest.TestCase
             mdl.fixedValue = [1 1 1 0]';
             this.testObj.model = mdl;
             this.testObj = this.testObj.estimateParameters;
-            this.testObj.diagnose;
+            %this.testObj.diagnose;
             this.verifyTrue( this.testObj.isfinished);
             this.verifyEqual(this.testObj.model.modelParameters, [1 2 3 0]', 'RelTol', 1e-4);
             this.verifyEqual(this.testObj.model.objectiveFunc, 0, 'AbsTol', 1e-7);
@@ -89,6 +89,8 @@ classdef Test_BretthorstMcmc < matlab.unittest.TestCase
  			import mlbayesian.*;
             this.pwd0 = pushd(this.home);
  			this.testObj_ = BretthorstMcmc;
+            this.testObj_.showAnnealing = false;
+            this.testObj_.showBeta = false;
             this.addTeardown(@this.cleanFiles);
  		end
 	end
@@ -108,7 +110,7 @@ classdef Test_BretthorstMcmc < matlab.unittest.TestCase
 	methods (Access = private)
 		function cleanFiles(this)
             popd(this.pwd0);
-            close all
+            %close all
  		end
 	end
 

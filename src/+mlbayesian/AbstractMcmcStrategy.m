@@ -206,9 +206,7 @@ classdef AbstractMcmcStrategy < mlbayesian.AbstractBayesianStrategy & mlbayesian
             end
             nq = this.Q/aucs;
         end
-        function        plot(~, varargin)
-        end
-        function        plotAll(this)
+        function        plot(this, varargin)
             if (~this.showAnnealing)
                 this.plotAnnealing;
             end
@@ -217,7 +215,6 @@ classdef AbstractMcmcStrategy < mlbayesian.AbstractBayesianStrategy & mlbayesian
                 this.plotLogProbabilityQC;
                 this.histStdOfError;
             end
-            this.plot;
         end
         function        plotAnnealing(this) 
             this.theSolver.plotAnnealing;
