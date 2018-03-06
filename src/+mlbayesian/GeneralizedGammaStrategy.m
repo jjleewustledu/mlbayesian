@@ -45,7 +45,7 @@ classdef GeneralizedGammaStrategy < mlbayesian.AbstractMcmcStrategy
     
 	%  $Revision$
  	%  was created 27-Jun-2017 22:11:06 by jjlee,
- 	%  last modified $LastChangedDate$ and placed into repository /Users/jjlee/Local/src/mlcvl/mlbayesian/src/+mlbayesian.
+ 	%  last modified $LastChangedDate$ and placed into repository /Users/jjlee/MATLAB-Drive/mlbayesian/src/+mlbayesian.
  	%% It was developed on Matlab 9.2.0.538062 (R2017a) for MACI64.  Copyright 2017 John Joowon Lee.
  	
 
@@ -77,7 +77,7 @@ classdef GeneralizedGammaStrategy < mlbayesian.AbstractMcmcStrategy
 
     methods (Static)
         function [this,lg] = doBayes
-            this.filepath = fullfile(getenv('HOME'), 'Local', 'src', 'mlcvl', 'mlbayesian', 'data', '');
+            this.filepath = fullfile(getenv('HOME'), 'MATLAB-Drive', 'mlbayesian', 'data', '');
             cd(this.filepath);
             load('kernel6_span33_deg4.mat');
             %kernel = zeros(size(kernelBest));
@@ -88,7 +88,7 @@ classdef GeneralizedGammaStrategy < mlbayesian.AbstractMcmcStrategy
             [this,lg] = this.doItsBayes;
         end
         function        plotInitial
-            this.filepath = fullfile(getenv('HOME'), 'Local', 'src', 'mlcvl', 'mlbayesian', 'data', '');
+            this.filepath = fullfile(getenv('HOME'), 'MATLAB-Drive', 'mlbayesian', 'data', '');
             cd(this.filepath);
             load('kernel6_span33_deg4.mat');
             %kernel = zeros(size(kernelBest));

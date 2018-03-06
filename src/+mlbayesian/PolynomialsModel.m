@@ -1,5 +1,7 @@
 classdef PolynomialsModel < mlanalysis.NullModel
 	%% POLYNOMIALSMODEL supports p(t) := \Sigma_{i = 0}^3 a_i t^i
+	%  See also mlbayesian_unittest.Test_McmcCellular for benchmarks.  
+	%  For greater precision, first try increasing nBeta, then nAnneal.
 
 	%  $Revision$
  	%  was created 24-Dec-2017 17:30:19 by jjlee,

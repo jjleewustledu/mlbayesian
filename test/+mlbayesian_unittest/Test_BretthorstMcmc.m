@@ -11,7 +11,7 @@ classdef Test_BretthorstMcmc < matlab.unittest.TestCase
  	%% It was developed on Matlab 9.3.0.713579 (R2017b) for MACI64.  Copyright 2017 John Joowon Lee.
  	
 	properties
-        home = '/Users/jjlee/Tmp'
+        home = fullfile(getenv('HOME'), 'Tmp', '')
         pwd0
  		registry
  		testObj

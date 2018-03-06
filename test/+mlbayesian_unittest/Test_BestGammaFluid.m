@@ -17,7 +17,7 @@ classdef Test_BestGammaFluid < matlab.unittest.TestCase
         testFluidQ
  		testObj 
         times = 0:119
-        testFolder = '/Users/jjlee/Local/src/mlcvl/mlbayesian/test/+mlbayesian_unittest'
+        testFolder = fullfile(getenv('HOME'), 'MATLAB-Drive/mlbayesian/test/+mlbayesian_unittest')
         test_plots = false
         test_mcmc  = true
     end 

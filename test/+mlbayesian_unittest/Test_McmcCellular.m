@@ -94,7 +94,7 @@ classdef Test_McmcCellular < matlab.unittest.TestCase
             
             pmc = mlbayesian_unittest.PolynomialMcmcCellular({t}, {y}, ...
                 'NyquistFreqFactor', 2);
-            pmc = pmc.adjustN('nAnneal', 2); % 187% incr run time; 2x wider histStdOfError; 10^{-3} decr parameter posterior widths
+            pmc = pmc.adjustN('nAnneal', 100); % 187% incr run time; 2x wider histStdOfError; 10^{-3} decr parameter posterior widths
             tic; pmc = pmc.estimateParameters; toc
             y1 = pmc.estimateData;            
             this.verifyEqual(y1{1}, y, 'RelTol', 5e-7);
@@ -105,7 +105,7 @@ classdef Test_McmcCellular < matlab.unittest.TestCase
             
             pmc = mlbayesian_unittest.PolynomialMcmcCellular({t}, {y}, ...
                 'NyquistFreqFactor', 2);
-            pmc = pmc.adjustN('nAnneal', 1.5); % 137% incr run time; 10^{-1} decr parameter posterior widths
+            pmc = pmc.adjustN('nAnneal', 75); % 137% incr run time; 10^{-1} decr parameter posterior widths
             tic; pmc = pmc.estimateParameters; toc
             y1 = pmc.estimateData;            
             this.verifyEqual(y1{1}, y, 'RelTol', 5e-5);

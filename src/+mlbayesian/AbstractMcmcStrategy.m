@@ -100,15 +100,17 @@ classdef AbstractMcmcStrategy < mlbayesian.AbstractBayesianStrategy & mlbayesian
         
         %%
         
-        function this = adjustN(this, kind, n)
-            assert(ischar(kind));
+        function this = adjustN(this, adjustment, n)
+            if (isempty(adjustment) || isempty(n))
+                return
+            end
+            assert(ischar(adjustment));
             assert(isnumeric(n));
             tp = this.theParameters;
-            if (isempty(tp))
-                tp = mlbayesian.McmcParameters(this.mapParams, numel(cell2mat(this.independentData)));
-            end
-            tp.(kind) = tp.(kind)*n;
+            assert(~isempty(tp));
+            tp.(adjustment) = n;
             this.theParameters = tp;
+            fprintf('mlbayesian.AbstractMcmcStrategy.adjustN:  tp.%s := %i\n', adjustment, n);
         end
         function ps   = adjustParams(~, ps)
             %% ADJUSTPARAMS:  override as needed for parameter constraints
@@ -146,7 +148,7 @@ classdef AbstractMcmcStrategy < mlbayesian.AbstractBayesianStrategy & mlbayesian
             addOptional(ip, 'mapParams', this.mapParams, @(x) isa(x, 'containers.Map'));
             parse(ip, varargin{:});
             
-            this = this.runMcmc(ip.Results.mapParams, 'keysToVerify', this.keysParams_);
+            this = this.runMcmc(ip.Results.mapParams);
         end
         function x    = finalMeans(this, key)
             x = this.meanParams(this.theParameters.paramsIndices(key));
@@ -262,11 +264,12 @@ classdef AbstractMcmcStrategy < mlbayesian.AbstractBayesianStrategy & mlbayesian
                 this.theParameters_ = McmcParameters( ...
                     ip.Results.mapParams, numel(cell2mat(this.independentData)), ...
                     'pkeys', ip.Results.keysParams);
-            end
+            end            
+            this = this.adjustN(this.parameterToAdjust_, this.adjustmentValue_);
             
             this.theSolver       = McmcCellular(this);
             [~,~,this.theSolver] = this.theSolver.runMcmc;     
-            keys_ = ip.Results.keysParams;
+            keys_ = this.theParameters_.keysParams;
             for k = 1:length(keys_) 
                 this.(keys_{k}) = this.finalParams(keys_{k});
             end
@@ -314,6 +317,9 @@ classdef AbstractMcmcStrategy < mlbayesian.AbstractBayesianStrategy & mlbayesian
         keysArgs_
         keysParams_
         mapParams_
+        
+        parameterToAdjust_
+        adjustmentValue_
     end
     
     methods (Access = protected)
@@ -390,13 +396,13 @@ classdef AbstractMcmcStrategy < mlbayesian.AbstractBayesianStrategy & mlbayesian
             sse = 0;
             edf = this.estimateDataFast(p{:});
             for iidx = 1:length(this.dependentData)
-                sse = sse + ...
-                      sum( (this.dependentData{iidx} - edf{iidx}).^2 );
+                summand = (this.dependentData{iidx} - edf{iidx}).^2 ./ this.dependentData{iidx};
+                sse = sse + sum(summand(isfinite(summand)));
             end
             if (sse < 10*eps)
                 sse = sse + (1 + rand(1))*10*eps; 
             end
-        end        
+        end     
         function sse  = sumSquaredResidualsJeffreys(this, p)
             %% SUMSQUAREDRESIDUALSJEFFREYS returns the sum-of-square residuals for all cells of this.dependentData and 
             %  corresponding this.estimateDataFast.  This 

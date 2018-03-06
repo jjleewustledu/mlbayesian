@@ -14,7 +14,7 @@ classdef Test_AbstractMcmcProblem < matlab.unittest.TestCase
  	%  $Id$ 
 
     properties 
-        unittest_home = '/Users/jjlee/Local/src/mlcvl/mlbayesian/test/+mlbayesian_unittest'
+        unittest_home = fullfile(getenv('HOME'), 'MATLAB-Drive/mlbayesian/test/+mlbayesian_unittest')
         testProblem = 'kinetics4'
     end
     

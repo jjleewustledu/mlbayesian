@@ -11,7 +11,7 @@ classdef McmcCellular < mlbayesian.IMCMC
     %% Copyright 2015 G. Larry Bretthorst, Joshua S. Shimony, John J. Lee.
 
     properties (Constant)
-        NBINS       = 50   % nbins for hist
+        NBINS       = 32   % nbins for hist
         FRACPEEK    =  0.2
         PARPEN      =  0.0 % -1.0 % minimal penalty for each param (unused)
         MAX_PROP    = 50
@@ -383,7 +383,11 @@ classdef McmcCellular < mlbayesian.IMCMC
             xlabel('beta (1/temp)');
             ylabel('log(prob)');
         end
-        function histParametersDistributions__(this)
+        function histParametersDistributions(this)
+            this.histParametersDistributions1D;
+            this.pcolorParametersDistributions;
+        end
+        function histParametersDistributions1D(this)
             
             % histogram sampling phase
             % histogram parameter distribution
@@ -395,26 +399,54 @@ classdef McmcCellular < mlbayesian.IMCMC
                 xlabel(['Parameter ', this.paramIndexToLabel(k)]);
             end
         end
-        function histParametersDistributions(this)
+        function histParametersDistributions2D(this)
             
             % histogram sampling phase
             % histogram parameter distribution
             figure;
+            hold on;    
             Np = double(this.nParams);
+            this.titleParametersDisributions;
             for m = 1:Np % rows
-            for n = 1:Np % cols
-                subplot(Np, Np, double(n + double(m-1)*Np));
-                hold on;
-                dat = [this.paramsHist(n,:)', this.paramsHist(m,:)'];
-                hn  = hist3(dat, [this.NBINS, this.NBINS]);
-                xb  = linspace(min(dat(:,1)), max(dat(:,1)), size(hn,1));
-                yb  = linspace(min(dat(:,2)), max(dat(:,2)), size(hn,1));
-                pcolor(xb, yb, hn);
-                shading('flat');
-                set(gca, 'YDir', 'Reverse');
-                xlabel(sprintf('%s x %s', this.paramIndexToLabel(m), this.paramIndexToLabel(n)));
+                for n = 1:Np % cols
+                    subplot(Np, Np, double(n + double(m-1)*Np));
+                    dat = [this.paramsHist(n,:)', this.paramsHist(m,:)'];
+                    hn  = hist3(dat, [this.NBINS, this.NBINS]);
+                    xb  = linspace(min(dat(:,1)), max(dat(:,1)), size(hn,1));
+                    yb  = linspace(min(dat(:,2)), max(dat(:,2)), size(hn,1));
+                    pcolor(xb, yb, hn);
+                    shading interp
+                    axis square
+                    axis ij
+                    %axis off
+                end
             end
+        end
+        function pcolorParametersDistributions(this)
+            
+            % histogram sampling phase
+            % histogram parameter distribution
+            figure;
+            this.titleParametersDisributions;  
+            Np = double(this.nParams);
+            histm = [];
+            for m = 1:Np % rows
+                histn = [];
+                for n = 1:Np % cols
+                    dat   = [this.paramsHist(n,:)', this.paramsHist(m,:)'];
+                    histn = cat(2, histn, hist3(dat, [this.NBINS, this.NBINS]), nan(this.NBINS, 1));
+                end
+                histm = cat(1, histm, histn, nan(1, Np*(this.NBINS+1)));
             end
+            pcolor(histm);
+            shading interp
+            axis square
+            axis ij
+            axis off
+        end
+        function titleParametersDisributions(this)
+            ti = cell2str(this.parameters.keysParams, 'AsRow', true);
+            title(sprintf('[%s]^T  x  [%s]', ti, ti)); 
         end
         function plotLogProbabilityQC(this)
             figure;

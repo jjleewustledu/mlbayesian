@@ -55,6 +55,9 @@ classdef (Abstract) AbstractBayesianStrategy < mlio.AbstractIO & mlbayesian.IBay
             g = this.dependentData_;
         end
         function this = set.dependentData(this, s)
+            if (isempty(s))
+                return
+            end
             assert(iscell(s));
             this.dependentData_ = s;
             for iis = 1:length(s)
@@ -72,6 +75,9 @@ classdef (Abstract) AbstractBayesianStrategy < mlio.AbstractIO & mlbayesian.IBay
             g = this.independentData_;
         end
         function this = set.independentData(this, s)
+            if (isempty(s))
+                return
+            end
             assert(iscell(s));
             this.independentData_ = s;
             for iis = 1:length(s)
@@ -151,11 +157,11 @@ classdef (Abstract) AbstractBayesianStrategy < mlio.AbstractIO & mlbayesian.IBay
             
             ip = inputParser;
             ip.KeepUnmatched = true;
-            addOptional(ip,  'indepData', {[]}, @iscell); 
-            addOptional(ip,  'depData', {[]}, @iscell);
+            addOptional(ip,  'indepData', {}, @iscell); 
+            addOptional(ip,  'depData', {}, @iscell);
             addParameter(ip, 'sessionData', [], @(x) isa(x, 'mlpipeline.SessionData'));
             addParameter(ip, 'mcmcParameters', [], @(x) isa(x, 'mlbayesian.IMcmcParameters'));
-            addParameter(ip, 'NyquistFreqFactor', 4, @(x) isnumeric(x) && x > 1);
+            addParameter(ip, 'NyquistFreqFactor', 2, @(x) isnumeric(x) && x > 1);
             parse(ip, varargin{:});            
  			
             this.NyquistFreqFactor_ = ip.Results.NyquistFreqFactor;
