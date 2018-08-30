@@ -1,4 +1,4 @@
-classdef (Abstract) AbstractBayesianStrategy < mlio.AbstractIO & mlbayesian.IBayesianStrategy
+classdef (Abstract) AbstractBayesianStrategy < handle & mlio.AbstractHandleIO & mlbayesian.IBayesianStrategy
 	%% ABSTRACTBAYESIANSTRATEGY  
 
 	%  $Revision$
@@ -35,154 +35,6 @@ classdef (Abstract) AbstractBayesianStrategy < mlio.AbstractIO & mlbayesian.IBay
     end
     
     methods (Static)
-        function this = load(fn) %#ok<STOUT>
-            load(fn, 'this');
-        end
-    end
-    
-    methods 
-        
-        %% GET/SET
-        
-        function g    = get.baseTitle(this)
-            if (isempty(this.sessionData))
-                g = sprintf('%s in %s', class(this), pwd);
-                return
-            end
-            g = sprintf('%s in %s', class(this), this.sessionData.sessionFolder);
-        end
-        function g    = get.dependentData(this)
-            g = this.dependentData_;
-        end
-        function this = set.dependentData(this, s)
-            if (isempty(s))
-                return
-            end
-            assert(iscell(s));
-            this.dependentData_ = s;
-            for iis = 1:length(s)
-                this.dependentDataInterp_{iis} = ...
-                    pchip(this.independentData_{iis}, this.dependentData_{iis}, this.independentDataInterp{iis});                
-            end
-        end
-        function g    = get.dependentDataInterp(this)
-            g  = this.dependentDataInterp_;
-        end
-        function g    = get.dt(this)
-            g = this.dt_;
-        end
-        function g    = get.independentData(this)
-            g = this.independentData_;
-        end
-        function this = set.independentData(this, s)
-            if (isempty(s))
-                return
-            end
-            assert(iscell(s));
-            this.independentData_ = s;
-            for iis = 1:length(s)
-                this.independentDeltas_{iis} = ...
-                    [(s{iis}(2:end) - s{iis}(1:end-1)) (s{iis}(end) - s{iis}(end-1))];
-            end
-            this.dt_ = min(min(cell2mat(this.independentDeltas_)))/this.NyquistFreqFactor;
-            for iis = 1:length(s)
-                this.independentDataInterp_{iis} = ...
-                    this.independentData{iis}(1):this.dt_:this.independentData{iis}(end);
-                
-            end
-        end
-        function g    = get.independentDataInterp(this)
-            g  = this.independentDataInterp_;
-        end
-        function g    = get.independentDeltas(this)
-            g = this.independentDeltas_;
-        end
-        function g    = get.NyquistFreqFactor(this)
-            g = this.NyquistFreqFactor_;
-        end
-        function g    = get.sessionData(this)
-            g = this.sessionData_;
-        end
-        function this = set.sessionData(this, s)
-            assert(isa(s, 'mlpipeline.ISessionData'));
-            this.sessionData_ = s;
-        end
-        function g    = get.theParameters(this)
-            g = this.theParameters_;
-        end
-        function this = set.theParameters(this, s)
-            assert(isa(s, 'mlbayesian.IMcmcParameters'));
-            this.theParameters_ = s;
-        end
-        function g    = get.theSolver(this)
-            g = this.theSolver_;
-        end
-        function this = set.theSolver(this, s)
-            assert(isa(s, 'mlbayesian.IMCMC'));
-            this.theSolver_ = s;
-        end
-        function g    = get.verbosity(this)
-            g = this.verbosity_;
-        end
-        
-        function g    = get.taus(this)
-            g = this.independentDeltas;
-        end
-        function g    = get.times(this)
-            g = this.independentData;
-        end
-        function g    = get.timeFinal(this)
-            for iidx = 1:length(this.independentData)
-                g(iidx) = this.independentData{iidx}(end); %#ok<AGROW>
-            end
-        end
-        function g    = get.timeInitial(this) 
-            for iidx = 1:length(this.independentData)
-                g(iidx) = this.independentData{iidx}(1); %#ok<AGROW>
-            end
-        end
-        function g    = get.timeInterpolants(this)
-            g = this.independentDataInterp;
-        end
-    
-        %%
-        
-        function save(this)
-            save(this.fqfilename, 'this');
-        end
-        
- 		function this = AbstractBayesianStrategy(varargin)
- 			%% ABSTRACTBAYESIANSTRATEGY
- 			%  Usage:  this = AbstractBayesianStrategy([independent_data, dependent_data])
-            
-            ip = inputParser;
-            ip.KeepUnmatched = true;
-            addOptional(ip,  'indepData', {}, @iscell); 
-            addOptional(ip,  'depData', {}, @iscell);
-            addParameter(ip, 'sessionData', [], @(x) isa(x, 'mlpipeline.SessionData'));
-            addParameter(ip, 'mcmcParameters', [], @(x) isa(x, 'mlbayesian.IMcmcParameters'));
-            addParameter(ip, 'NyquistFreqFactor', 2, @(x) isnumeric(x) && x > 1);
-            parse(ip, varargin{:});            
- 			
-            this.NyquistFreqFactor_ = ip.Results.NyquistFreqFactor;
-            this.independentData = ip.Results.indepData;
-            this.dependentData   = ip.Results.depData;
-            for didx = 1:length(this.dependentData)
-                assert(all(size(this.independentData{didx}) == size(this.dependentData{didx})));
-            end
-            this.sessionData_ = ip.Results.sessionData;
-            this.theParameters_ = ip.Results.mcmcParameters;
-            this = this.setVerbosityCache;            
-            this.fileprefix = sprintf(strrep(class(this), '.', '_'));
-            this.filesuffix = '.mat';
-        end 
-    end
-    
-    methods (Static)
-        function h       = Heaviside(t, t0)
-            h = zeros(size(t));
-            h = h + double(t > t0);
-        end
         function           appendState(fname, state)
             if (~lstrfind(fname, '.mat'))
                 fname = [fname '.mat'];
@@ -204,6 +56,13 @@ classdef (Abstract) AbstractBayesianStrategy < mlio.AbstractIO & mlbayesian.IBay
                 return
             end
             T = false; 
+        end
+        function h       = Heaviside(t, t0)
+            h = zeros(size(t));
+            h = h + double(t > t0);
+        end
+        function this    = load(fn) %#ok<STOUT>
+            load(fn, 'this');
         end
         function           saveState(fname, state)
             if (isempty(fname) || isempty(state))
@@ -259,7 +118,144 @@ classdef (Abstract) AbstractBayesianStrategy < mlio.AbstractIO & mlbayesian.IBay
             dt1 = t(2) - t(1);
             tf  = all(abs(dt1*ones(1,length(dts)) - dts) < eps('single'));
         end
-    end    
+    end 
+    
+    methods 
+        
+        %% GET/SET
+        
+        function g = get.baseTitle(this)
+            if (isempty(this.sessionData))
+                g = sprintf('%s in %s', class(this), pwd);
+                return
+            end
+            g = sprintf('%s in %s', class(this), this.sessionData.sessionFolder);
+        end
+        function g = get.dependentData(this)
+            g = this.dependentData_;
+        end
+        function     set.dependentData(this, s)
+            if (isempty(s))
+                return
+            end
+            s = cellfun(@(x) this.ensureRow(x), s, 'UniformOutput', false);
+            this.dependentData_ = s;
+            for iis = 1:length(s)
+                this.dependentDataInterp_{iis} = ...
+                    pchip(this.independentData_{iis}, this.dependentData_{iis}, this.independentDataInterp{iis});                
+            end
+        end
+        function g = get.dependentDataInterp(this)
+            g  = this.dependentDataInterp_;
+        end
+        function g = get.dt(this)
+            g = this.dt_;
+        end
+        function g = get.independentData(this)
+            g = this.independentData_;
+        end
+        function     set.independentData(this, s)
+            if (isempty(s))
+                return
+            end
+            s = cellfun(@(x) this.ensureRow(x), s, 'UniformOutput', false);
+            this.independentData_ = s;
+            for iis = 1:length(s)
+                this.independentDeltas_{iis} = ...
+                    [(s{iis}(2:end) - s{iis}(1:end-1)) (s{iis}(end) - s{iis}(end-1))];
+            end
+            this.dt_ = min(min(cell2mat(this.independentDeltas_)))/this.NyquistFreqFactor;
+            for iis = 1:length(s)
+                this.independentDataInterp_{iis} = ...
+                    this.independentData{iis}(1):this.dt_:this.independentData{iis}(end);                
+            end
+        end
+        function g = get.independentDataInterp(this)
+            g  = this.independentDataInterp_;
+        end
+        function g = get.independentDeltas(this)
+            g = this.independentDeltas_;
+        end
+        function g = get.NyquistFreqFactor(this)
+            g = this.NyquistFreqFactor_;
+        end
+        function g = get.sessionData(this)
+            g = this.sessionData_;
+        end
+        function     set.sessionData(this, s)
+            assert(isa(s, 'mlpipeline.ISessionData'));
+            this.sessionData_ = s;
+        end
+        function g = get.theParameters(this)
+            g = this.theParameters_;
+        end
+        function     set.theParameters(this, s)
+            assert(isa(s, 'mlbayesian.IMcmcParameters'));
+            this.theParameters_ = s;
+        end
+        function g = get.theSolver(this)
+            g = this.theSolver_;
+        end
+        function     set.theSolver(this, s)
+            assert(isa(s, 'mlbayesian.IMCMC'));
+            this.theSolver_ = s;
+        end
+        function g = get.verbosity(this)
+            g = this.verbosity_;
+        end
+        
+        function g = get.taus(this)
+            g = this.independentDeltas;
+        end
+        function g = get.times(this)
+            g = this.independentData;
+        end
+        function g = get.timeFinal(this)
+            for iidx = 1:length(this.independentData)
+                g(iidx) = this.independentData{iidx}(end); %#ok<AGROW>
+            end
+        end
+        function g = get.timeInitial(this) 
+            for iidx = 1:length(this.independentData)
+                g(iidx) = this.independentData{iidx}(1); %#ok<AGROW>
+            end
+        end
+        function g = get.timeInterpolants(this)
+            g = this.independentDataInterp;
+        end
+    
+        %%
+        
+        function save(this)
+            save(this.fqfilename, 'this');
+        end
+        
+ 		function this = AbstractBayesianStrategy(varargin)
+ 			%% ABSTRACTBAYESIANSTRATEGY
+ 			%  Usage:  this = AbstractBayesianStrategy([independent_data, dependent_data])
+            
+            ip = inputParser;
+            ip.KeepUnmatched = true;
+            addOptional(ip,  'indepData', {}, @iscell); 
+            addOptional(ip,  'depData', {}, @iscell);
+            addParameter(ip, 'sessionData', [], @(x) isa(x, 'mlpipeline.SessionData'));
+            addParameter(ip, 'mcmcParameters', [], @(x) isa(x, 'mlbayesian.IMcmcParameters'));
+            addParameter(ip, 'NyquistFreqFactor', 2, @(x) isnumeric(x) && x > 1);
+            parse(ip, varargin{:});            
+ 			
+            this.NyquistFreqFactor_ = ip.Results.NyquistFreqFactor;
+            this.independentData    = ip.Results.indepData;
+            this.dependentData      = ip.Results.depData;
+            this.sessionData_       = ip.Results.sessionData;
+            this.theParameters_     = ip.Results.mcmcParameters;
+            this.fileprefix         = sprintf(strrep(class(this), '.', '_'));
+            this.filesuffix         = '.mat';
+            this = this.setVerbosityCache;            
+            for idd = 1:length(this.dependentData)
+                assert(all(size(this.independentData{idd}) == size(this.dependentData{idd})));
+            end
+        end 
+    end   
     
     %% PROTECTED
     

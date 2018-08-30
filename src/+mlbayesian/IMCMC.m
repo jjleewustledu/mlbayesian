@@ -1,4 +1,4 @@
-classdef IMCMC  
+classdef IMCMC < handle
 	%% IMCMC   
     %
 	%  $Revision$ 

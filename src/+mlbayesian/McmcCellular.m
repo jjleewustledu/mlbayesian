@@ -1,4 +1,4 @@
-classdef McmcCellular < mlbayesian.IMCMC 
+classdef McmcCellular < handle & mlbayesian.IMCMC 
 	%% MCMCCELLULAR has the machinery to do a simple Bayesian estimation;
     %  it becomes more verbose for getenv('VERBOSITY') > 0 or for getenv('VERBOSE') == 1.
 
@@ -11,8 +11,8 @@ classdef McmcCellular < mlbayesian.IMCMC
     %% Copyright 2015 G. Larry Bretthorst, Joshua S. Shimony, John J. Lee.
 
     properties (Constant)
-        NBINS       = 32   % nbins for hist
-        FRACPEEK    =  0.2
+        NBINS       = 50   % nbins for hist
+        FRACPEEK    =  0.25
         PARPEN      =  0.0 % -1.0 % minimal penalty for each param (unused)
         MAX_PROP    = 50
         FRAC_POPREP =  0.1
@@ -55,32 +55,35 @@ classdef McmcCellular < mlbayesian.IMCMC
         verbosity
     end
     
-    methods %% GET/SET
-        function n = get.parameters(this)
+    methods
+        
+        %% GET/SET
+        
+        function n  = get.parameters(this)
             n = this.parameters_;
         end
-        function n = get.nParams(this)
+        function n  = get.nParams(this)
             n = length(this.parameters);
         end
-        function n = get.nProposals(this)
+        function n  = get.nProposals(this)
             n = this.parameters.nProposals;
         end
-        function n = get.nPop(this)
+        function n  = get.nPop(this)
             n = this.parameters.nPop;
         end
-        function n = get.nPopRep(this)
+        function n  = get.nPopRep(this)
             n = this.FRAC_POPREP * this.nPop;
         end
-        function n = get.nBeta(this)
+        function n  = get.nBeta(this)
             n = this.parameters.nBeta;
         end
-        function n = get.nAnneal(this)
+        function n  = get.nAnneal(this)
             n = this.parameters.nAnneal;
         end
-        function n = get.nSamples(this)
+        function n  = get.nSamples(this)
             n = this.parameters.nSamples;
         end
-        function n = get.nProposalsQC(this)
+        function n  = get.nProposalsQC(this)
             n = ceil(this.FRACPEEK * this.nProposals);
         end
         function tf = get.showAnnealing(this)
@@ -101,51 +104,9 @@ classdef McmcCellular < mlbayesian.IMCMC
         function v  = get.verbosity(this)
             v = this.mcmcStrategy_.verbosity;
         end
-    end
-    
-	methods
-        function this                = McmcCellular(mcmcStrat)
-            
-            p = inputParser;
-            addRequired(p, 'mcmcStrat', @(x) isa(x, 'mlbayesian.IMcmcStrategy'));
-            parse(p, mcmcStrat);
-            
-            this.mcmcStrategy_     = p.Results.mcmcStrat;
-            this.parameters_       = this.mcmcStrategy_.theParameters; % cached for speed
-            this.paramsBetas       = zeros(this.nParams, this.nBeta);  
-            this.paramsPopulations = zeros(this.nParams, this.nPop);   
-            this.paramsSigmas      = zeros(this.nParams, 1);  
-            this.bestFitParams     = zeros(this.nParams, 1);  
-            this.stdOfError        = zeros(this.nPop*this.nProposalsQC, 1); % follow the standard deviation of error     
-            this.annealingAvpar    = zeros(this.nParams, 1);
-            this.annealingSdpar    = zeros(this.nParams, 1);
-            this.annealingInitz    = zeros(this.nParams, 1);
-            
-            this.lpBetas       = zeros(this.nBeta, 1);
-            this.lpPopulations = zeros(this.nPop, 1);            
-            this.lpQC          = zeros(this.nPop, this.nProposalsQC);              % qc on the lprob
-            this.paramsHist    = zeros(this.nParams, this.nPop*this.nProposalsQC); % for histogram of parameters          
-            
-            %% %%%%%%%%%%%%%%%%%%%
-            %% initialize the Mcmc
-            %% %%%%%%%%%%%%%%%%%%%
-            
-            if (this.verbosity > eps)
-                fprintf('mlbayesian.McmcCellular.ctor:  initializing McmcCellular'); end
-            for m = 1:this.nPop
-                this.paramsSigmas = (this.parameters.max_ - this.parameters.min_)/10.0;
-                for k = 1:this.nParams
-                    if (this.parameters.fixed(k))
-                        this.paramsPopulations(k,m) = this.parameters.fixedValue(k);
-                    else
-                        this.paramsPopulations(k,m) = this.parameters.mean_(k) + this.parameters.std_(k)*randn(1,1);
-                        while (this.paramsPopulations(k,m)<this.parameters.min_(k) || this.paramsPopulations(k,m)>this.parameters.max_(k))
-                            this.paramsPopulations(k,m) = this.parameters.mean_(k) + this.parameters.std_(k)*randn(1,1);
-                        end
-                    end
-                end
-            end
-        end  
+        
+        %%
+        
         function [parmax,avpar,this] = runMcmc(this)
             %% MCMCCELLULAR (Markov Chain Monte-Carlo) has the machinery to do a simple Bayesian estimation
             %
@@ -307,7 +268,7 @@ classdef McmcCellular < mlbayesian.IMCMC
             %  from J. S. Shimony, Mar, 2014
             
             paramsVec = this.mcmcStrategy_.adjustParams(paramsVec);
-            lprob = this.mcmcStrategy_.sumSquaredErrors(paramsVec);
+            lprob = this.mcmcStrategy_.Q(paramsVec);
             
             if (lpFlag == -1)
                 return
@@ -461,10 +422,53 @@ classdef McmcCellular < mlbayesian.IMCMC
         end
         function histStdOfError(this)
             figure;
-            hist(this.stdOfError, this.NBINS);
+            hist(real(this.stdOfError), this.NBINS);
             title('histStdOfError');
             xlabel('std. dev. of error');
         end
+        
+        function this = McmcCellular(mcmcStrat)
+            
+            p = inputParser;
+            addRequired(p, 'mcmcStrat', @(x) isa(x, 'mlbayesian.IMcmcStrategy'));
+            parse(p, mcmcStrat);
+            
+            this.mcmcStrategy_     = p.Results.mcmcStrat;
+            this.parameters_       = this.mcmcStrategy_.theParameters; % cached for speed
+            this.paramsBetas       = zeros(this.nParams, this.nBeta);  
+            this.paramsPopulations = zeros(this.nParams, this.nPop);   
+            this.paramsSigmas      = zeros(this.nParams, 1);  
+            this.bestFitParams     = zeros(this.nParams, 1);  
+            this.stdOfError        = zeros(this.nPop*this.nProposalsQC, 1); % follow the standard deviation of error     
+            this.annealingAvpar    = zeros(this.nParams, 1);
+            this.annealingSdpar    = zeros(this.nParams, 1);
+            this.annealingInitz    = zeros(this.nParams, 1);
+            
+            this.lpBetas       = zeros(this.nBeta, 1);
+            this.lpPopulations = zeros(this.nPop, 1);            
+            this.lpQC          = zeros(this.nPop, this.nProposalsQC);              % qc on the lprob
+            this.paramsHist    = zeros(this.nParams, this.nPop*this.nProposalsQC); % for histogram of parameters          
+            
+            %% %%%%%%%%%%%%%%%%%%%
+            %% initialize the Mcmc
+            %% %%%%%%%%%%%%%%%%%%%
+            
+            if (this.verbosity > eps)
+                fprintf('mlbayesian.McmcCellular.ctor:  initializing McmcCellular'); end
+            for m = 1:this.nPop
+                this.paramsSigmas = (this.parameters.max_ - this.parameters.min_)/10.0;
+                for k = 1:this.nParams
+                    if (this.parameters.fixed(k))
+                        this.paramsPopulations(k,m) = this.parameters.fixedValue(k);
+                    else
+                        this.paramsPopulations(k,m) = this.parameters.mean_(k) + this.parameters.std_(k)*randn(1,1);
+                        while (this.paramsPopulations(k,m)<this.parameters.min_(k) || this.paramsPopulations(k,m)>this.parameters.max_(k))
+                            this.paramsPopulations(k,m) = this.parameters.mean_(k) + this.parameters.std_(k)*randn(1,1);
+                        end
+                    end
+                end
+            end
+        end  
     end
     
     %% PRIVATE
@@ -483,7 +487,7 @@ classdef McmcCellular < mlbayesian.IMCMC
         function              printAnnealing(this, b, parn)
             if ( this.verbosity < 0.2); return; end
             if (~this.showAnnealing); return; end
-            if ( ceil(this.FRACPEEK*this.nBeta) == b)
+            if ( mod(b, ceil(this.FRACPEEK*this.nBeta)) == 0)
                 fprintf('\n');
                 for k = 1:this.nParams
                     fprintf('annealing step %d param %3s mean %f\t std %f\t sigma %f\t acc %f\n',...
@@ -599,12 +603,13 @@ classdef McmcCellular < mlbayesian.IMCMC
         end
         function [lp1,this] = updateHistograms(this, j, m, lp0, lp1, ptmp)
             if (mod(j, ceil(1/this.FRACPEEK)) == 0)
-                this.lpQC(m, j*this.FRACPEEK) = lp0;
+                jfrac = ceil(j*this.FRACPEEK);
+                this.lpQC(m, jfrac) = lp0;
                 for k = 1:this.nParams
-                    this.paramsHist(k,(m-1)*this.nProposalsQC + j*this.FRACPEEK) = ptmp(k);
+                    this.paramsHist(k,(m-1)*this.nProposalsQC + jfrac) = ptmp(k);
                 end
                 lp1 = this.logProbability(ptmp, 1.0, -1);
-                this.stdOfError((m-1)*this.nProposalsQC + j*this.FRACPEEK) = sqrt(lp1/(this.nSamples-2));
+                this.stdOfError((m-1)*this.nProposalsQC + jfrac) = sqrt(lp1/(this.nSamples-2));
             end
         end
     end

@@ -1,4 +1,4 @@
-classdef AbstractMcmcStrategy < mlbayesian.AbstractBayesianStrategy & mlbayesian.IMcmcStrategy
+classdef AbstractMcmcStrategy < handle & mlbayesian.AbstractBayesianStrategy & mlbayesian.IMcmcStrategy
 	%% ABSTRACTMCMCSTRATEGY provides data and behavior for MCMC.
     %  Uses a form of Jeffreys' prior in sumSquaredErrors.
 
@@ -11,7 +11,6 @@ classdef AbstractMcmcStrategy < mlbayesian.AbstractBayesianStrategy & mlbayesian
  	
     
     properties    
-        cost           = 'sumSquaredResiduals'
         showAnnealing  = true
         showBeta       = true
         showBestFit    = true
@@ -25,7 +24,6 @@ classdef AbstractMcmcStrategy < mlbayesian.AbstractBayesianStrategy & mlbayesian
         annealingSdpar        
         bestFitParams
         expectedBestFitParams
-        jeffreysPrior
         meanParams
         stdParams
         stdOfError        
@@ -42,59 +40,56 @@ classdef AbstractMcmcStrategy < mlbayesian.AbstractBayesianStrategy & mlbayesian
     
     methods 
         
-        %% GET
+        %% GET/SET
         
-        function a  = get.annealingAvpar(this)
+        function a = get.annealingAvpar(this)
             a = this.theSolver.annealingAvpar; % query what was actually used for MCMC
         end
-        function a  = get.annealingInitz(this)
+        function a = get.annealingInitz(this)
             a = this.theSolver.annealingInitz; % query what was actually used for MCMC
         end
-        function a  = get.annealingSdpar(this)
+        function a = get.annealingSdpar(this)
             a = this.theSolver.annealingSdpar; % query what was actually used for MCMC
         end        
-        function g  = get.bestFitParams(this)
+        function g = get.bestFitParams(this)
             assert(~isempty(this.theSolver));
             g = this.theSolver.bestFitParams;
         end
-        function g  = get.expectedBestFitParams(this)
+        function g = get.expectedBestFitParams(this)
             g = cell2mat(this.keysArgs_);
         end
-        function j  = get.jeffreysPrior(this)
-            j = this.jeffreysPrior_;
-        end
-        function p  = get.meanParams(this)
+        function p = get.meanParams(this)
             p = this.theSolver.meanParams;
         end
-        function g  = get.stdParams(this)
+        function g = get.stdParams(this)
             g = this.theSolver.stdParams;
         end
-        function g  = get.stdOfError(this)
+        function g = get.stdOfError(this)
             g = this.theSolver.stdOfError;
         end
         
-        function n  = get.nParams(this)
+        function n = get.nParams(this)
             n = this.theParameters.length;
         end
-        function n  = get.nProposals(this)
+        function n = get.nProposals(this)
             n = this.theSolver.nProposals; % query what was actually used for MCMC
         end
-        function n  = get.nPop(this)
+        function n = get.nPop(this)
             n = this.theSolver.nPop; % query what was actually used for MCMC
         end
-        function n  = get.nPopRep(this)
+        function n = get.nPopRep(this)
             n = this.theSolver.nPopRep; % query what was actually used for MCMC
         end
-        function n  = get.nBeta(this)
+        function n = get.nBeta(this)
             n = this.theSolver.nBeta; % query what was actually used for MCMC
         end
-        function n  = get.nAnneal(this)
+        function n = get.nAnneal(this)
             n = this.theSolver.nAnneal; % query what was actually used for MCMC
         end
-        function n  = get.nSamples(this)
+        function n = get.nSamples(this)
             n = numel(cell2mat(this.independentData));
         end
-        function n  = get.nProposalsQC(this)
+        function n = get.nProposalsQC(this)
             n = this.theSolver.nProposalsQC; % query what was actually used for MCMC
         end
         
@@ -126,7 +121,7 @@ classdef AbstractMcmcStrategy < mlbayesian.AbstractBayesianStrategy & mlbayesian
             lenKeys = max(cellfun(@(x) length(x), keys));
             s = '';
             for p = 1:this.mapParams.Count
-                s = [s sprintf('    %*s: %s\n', lenKeys, keys{p}, struct2str(vals{p}, 'Punctuation', false))];
+                s = [s sprintf('    %*s: %s\n', lenKeys, keys{p}, struct2str(vals{p}, 'Punctuation', false))]; %#ok<AGROW>
             end
             disp(s);
         end
@@ -236,8 +231,11 @@ classdef AbstractMcmcStrategy < mlbayesian.AbstractBayesianStrategy & mlbayesian
             fprintf('FINAL STATS Q               %g\n', this.Q);
             fprintf('FINAL STATS Q normalized    %g\n', this.normalizedQ);
         end
-        function q    = Q(this)
-            q = this.sumSquaredErrors(this.bestFitParams);
+        function q    = Q(this, varargin)
+            ip = inputParser;
+            addOptional(ip, 'paramsVec', this.bestFitParams, @isnumeric);
+            parse(ip, varargin{:});
+            q = this.sse_.sumSquaredErrors(ip.Results.paramsVec);
         end        
         function this = runMcmc(this, varargin)
             %% RUNMCMC should be run from within method estimateParameters, implemented as described below.
@@ -255,7 +253,8 @@ classdef AbstractMcmcStrategy < mlbayesian.AbstractBayesianStrategy & mlbayesian
             addOptional( ip, 'mapParams', this.mapParams, @(x) isa(x, 'containers.Map'));
             addParameter(ip, 'keysParams', {}, @iscell);
             addParameter(ip, 'mcmcParameters', this.theParameters_, @(x) isa(x, 'mlbayesian.IMcmcParameters'));
-            parse(ip, varargin{:});                    
+            parse(ip, varargin{:});
+            
             if (~isempty(ip.Results.keysParams))
                 this.ensureKeyOrdering(ip.Results.keysParams);
             end            
@@ -265,9 +264,9 @@ classdef AbstractMcmcStrategy < mlbayesian.AbstractBayesianStrategy & mlbayesian
                     ip.Results.mapParams, numel(cell2mat(this.independentData)), ...
                     'pkeys', ip.Results.keysParams);
             end            
-            this = this.adjustN(this.parameterToAdjust_, this.adjustmentValue_);
-            
+            this = this.adjustN(this.parameterToAdjust_, this.adjustmentValue_);            
             this.theSolver       = McmcCellular(this);
+            
             [~,~,this.theSolver] = this.theSolver.runMcmc;     
             keys_ = this.theParameters_.keysParams;
             for k = 1:length(keys_) 
@@ -276,18 +275,6 @@ classdef AbstractMcmcStrategy < mlbayesian.AbstractBayesianStrategy & mlbayesian
             this.printQNQ;
         end
         function this = simulateItsMcmc(this)
-        end
-        function sse  = sumSquaredErrors(this, p)
-            %% SUMSQUAREDERRORS 
-            
-            switch (this.cost)
-                case 'sumSquaredResiduals'
-                    sse = this.sumSquaredResiduals(p);
-                case 'sumSquaredResidualsJeffreys'
-                    sse = this.sumSquaredResidualsJeffreys(p);
-                otherwise
-                    error('mlbayesian:unsupportedSwitchCase', 'AbstractMcmcStrategy.sumSquaredErrors');
-            end
         end
         function this = updateSummary(this)
             s.class = class(this);
@@ -303,69 +290,38 @@ classdef AbstractMcmcStrategy < mlbayesian.AbstractBayesianStrategy & mlbayesian
         
  		function this = AbstractMcmcStrategy(varargin) 
  			%% ABSTRACTMCMCSTRATEGY 
- 			%  Usage:  this = AbstractMcmcStrategy() 
+ 			%  @param named QType is 'SumSquaredResiduals' 'SumSquaredWeightedResiduals' 'SumSquaredJeffreysResiduals'
 
  			this = this@mlbayesian.AbstractBayesianStrategy(varargin{:});
-        end 
-        
+            ip = inputParser;
+            ip.KeepUnmatched = true;
+            addOptional( ip, 'indepData', {}, @iscell); 
+            addOptional( ip, 'depData', {}, @iscell);
+            addParameter(ip, 'QType', 'SumSquaredResiduals', @ischar);
+            parse(ip, varargin{:});
+            
+            this.sse_ = mlbayesian.SumSquaredErrors.CreateSumSquaredErrors(this, ip.Results.QType);
+        end        
     end 
     
     %% PROTECTED
     
     properties (Access = protected)
-        jeffreysPrior_
         keysArgs_
         keysParams_
         mapParams_
+        sse_
         
         parameterToAdjust_
         adjustmentValue_
     end
     
     methods (Access = protected)
-        function this = buildJeffreysPrior(this)
-            %% JEFFREYSPRIOR
-            %  Cf. Gregory, Bayesian Logical Data Analysis for the Physical Sciences, sec. 3.7.1.
-            
-            p = cell(this.independentData);
-            for iidx = 1:length(p)
-                t = this.independentData{iidx};
-                for it = 1:length(t)
-                    if (abs(t(it)) < eps)
-                        t(it) = min(t(t > eps));
-                    end
-                end
-                p{iidx} = 1./(t*log(t(end)/t(1)));
-                p{iidx} = p{iidx}/sum(p{iidx});
-            end
-            this.jeffreysPrior_ = p;
-            this.cost = 'sumSquaredResidualsJeffreys';
-        end
-        function this = buildJeffreysPriorNonuniform(this)
-            %% JEFFREYSPRIOR
-            %  Cf. Gregory, Bayesian Logical Data Analysis for the Physical Sciences, sec. 3.7.1.
-            
-            p = cell(this.independentData);
-            for iidx = 1:length(p)
-                t = this.independentData{iidx};
-                for it = 1:length(t)
-                    if (abs(t(it)) < eps)
-                        t(it) = min(t(t > eps));
-                    end
-                end
-                taus_ = t(2:end) - t(1:end-1);
-                taus_ = [taus_ taus_(end)]; %#ok<AGROW>
-                p{iidx} = 1./(t*log(t(end)/t(1)));
-                p{iidx} = p{iidx}.*taus_/sum(p{iidx}.*taus_);
-            end
-            this.jeffreysPrior_ = p;
-            this.cost = 'sumSquaredResidualsJeffreys';
-        end
         function s    = keysParamsForSprintf(this, argsv)
             assert(length(argsv) == length(this.keyParams_));
             s = '';
             for a = 1:length(argsv)-1
-                s = [s this.keysParams_{a} ' %g, '];
+                s = [s this.keysParams_{a} ' %g, ']; %#ok<AGROW>
             end
             s = [s this.keysParams_{end} ' %g'];
         end
@@ -387,39 +343,7 @@ classdef AbstractMcmcStrategy < mlbayesian.AbstractBayesianStrategy & mlbayesian
                     cellfun(@(x) sprintf('%s = %g', par, x), num2cell(vars), 'UniformOutput', false)]);
             xlabel('time sampling index');
             ylabel(this.yLabel);
-        end        
-        function sse  = sumSquaredResiduals(this, p)
-            %% SUMSQUAREDRESIDUALS returns the sum-of-square residuals for all cells of this.dependentData and 
-            %  corresponding this.estimateDataFast.  
-            
-            p   = num2cell(p);
-            sse = 0;
-            edf = this.estimateDataFast(p{:});
-            for iidx = 1:length(this.dependentData)
-                summand = (this.dependentData{iidx} - edf{iidx}).^2 ./ this.dependentData{iidx};
-                sse = sse + sum(summand(isfinite(summand)));
-            end
-            if (sse < 10*eps)
-                sse = sse + (1 + rand(1))*10*eps; 
-            end
-        end     
-        function sse  = sumSquaredResidualsJeffreys(this, p)
-            %% SUMSQUAREDRESIDUALSJEFFREYS returns the sum-of-square residuals for all cells of this.dependentData and 
-            %  corresponding this.estimateDataFast.  This 
-            %  implementation weights the sum-of-square residuals with Jeffrey's prior according to this.independentData.
-            
-            p   = num2cell(p);
-            sse = 0;
-            edf = this.estimateDataFast(p{:});
-            for iidx = 1:length(this.dependentData)
-                sse = sse + ...
-                      sum( (this.dependentData{iidx} - edf{iidx}).^2 .* ...
-                            this.jeffreysPrior_{iidx} );
-            end
-            if (sse < 10*eps)
-                sse = sse + (1 + rand(1))*10*eps; 
-            end
-        end
+        end         
     end
 
 	%  Created with Newcl by John J. Lee after newfcn by Frank Gonzalez-Morphy

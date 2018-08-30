@@ -1,4 +1,4 @@
-classdef IMcmcStrategy 
+classdef IMcmcStrategy < handle
 	%% IMCMCSTRATEGY  
 
 	%  $Revision$
@@ -8,8 +8,7 @@ classdef IMcmcStrategy
  	%  and checked into repository /Users/jjlee/Local/src/mlcvl/mlbayesian/src/+mlbayesian.
  	%% It was developed on Matlab 8.5.0.197613 (R2015a) for MACI64.  Copyright 2015 John Joowon Lee. 
  	
-	properties (Abstract)        
-        cost
+	properties (Abstract)   
         mapParams
         showAnnealing
         showBeta
@@ -63,8 +62,7 @@ classdef IMcmcStrategy
                printQNQ(this)
         q    = Q(this)  
         this = runMcmc(this)  
-        this = simulateItsMcmc(this)
-        sse  = sumSquaredErrors(this, p)     
+        this = simulateItsMcmc(this)  
     end
 
 	%  Created with Newcl by John J. Lee after newfcn by Frank Gonzalez-Morphy

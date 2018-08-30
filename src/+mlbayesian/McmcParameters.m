@@ -9,10 +9,10 @@ classdef McmcParameters < mlbayesian.IMcmcParameters
  	%% It was developed on Matlab 8.5.0.197613 (R2015a) for MACI64.
  	
     properties % must be in heap memory for speed
-        nProposals = 100 % number of proposals for importance sampling
-        nPop       =  50 % number of population for annealing/burn-in and proposal/sampling
-        nBeta      =  50 % number of temperature steps
-        nAnneal    =  20 % number of loops per annealing temp
+        nProposals = 100 % number of proposals for importance sampling, ~100
+        nPop       =  50 % number of population for annealing/burn-in and proposal/sampling, ~50
+        nBeta      =  20 % number of temperature steps, ~50
+        nAnneal    =  20 % number of loops per annealing temp, ~20
         nSamples         % numel of independentData     
         
         fixed

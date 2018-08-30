@@ -1,4 +1,4 @@
-classdef (Abstract) IBayesianStrategy 
+classdef (Abstract) IBayesianStrategy < handle
 	%% IBAYESIANSTRATEGY is the context for AbstractBayesianStrategy 
 
 	%  $Revision$
@@ -9,7 +9,6 @@ classdef (Abstract) IBayesianStrategy
  	%% It was developed on Matlab 8.5.0.197613 (R2015a) for MACI64.  Copyright 2015 John Joowon Lee. 
  	
     properties (Abstract)
-        baseTitle
         dependentData % cells, e.g., densities = f(time)
         dependentDataInterp % cells, interpolated by this.NyquistFreq
         dt % scalar := min(min(cell2mat(this.independentDeltas)))/this.NyquistFreqFactor
