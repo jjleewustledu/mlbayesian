@@ -1,4 +1,4 @@
-classdef PolynomialsModel < mlanalysis.NullModel
+classdef PolynomialsModel < mlbayesian.NullModel
 	%% POLYNOMIALSMODEL supports p(t) := \Sigma_{i = 0}^3 a_i t^i
 	%  See also mlbayesian_unittest.Test_McmcCellular for benchmarks.  
 	%  For greater precision, first try increasing nBeta, then nAnneal.
@@ -27,6 +27,10 @@ classdef PolynomialsModel < mlanalysis.NullModel
     methods (Static)
         function name = parameterIndexToName(idx)
             names = {'a1' 'a2' 'a3' 'a4'}; % per Matlab's Fortran indexing
+            if (length(idx) > 1)
+                name = names(idx);
+                return
+            end
             name = names{idx};
         end
     end
@@ -85,9 +89,9 @@ classdef PolynomialsModel < mlanalysis.NullModel
             %  @param independentData is numeric, defaults to this.t0:this.dt:this.tfinal.
             %  @param dependentData   is numeric, defaults to generative model.
             %  @param useSynthetic    is logical; forces dependentData := generative model if true.
-            %  @returns mlanalysis.IModel solvable by mlanalysis.ISolver implementations.
+            %  @returns mlbayesian.IModel solvable by mlbayesian.ISolver implementations.
             
-            this = this@mlanalysis.NullModel(varargin{:}); 
+            this = this@mlbayesian.NullModel(varargin{:}); 
             this = this.setupKernel;        
             this = this.setupFilesystem;
             this = this.checkModel;

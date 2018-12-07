@@ -42,7 +42,7 @@ classdef BretthorstMcmc < mlbayesian.IMcmcSolver & mlio.AbstractIO
             this.model.useSynthetic = s;
         end
         function this = set.model(this, s)
-            assert(isa(s, 'mlanalysis.IModel'));
+            assert(isa(s, 'mlbayesian.IBretthorstModel'));
             this.model_ = s;
             this.model_.classOfSolver = class(this);
             this.logger_ = mlpipeline.Logger(this.model_.fqfileprefix);
@@ -54,6 +54,7 @@ classdef BretthorstMcmc < mlbayesian.IMcmcSolver & mlio.AbstractIO
             this.kernel.fprintf;
             this.plotAnnealing;
             this.plotParameterCovariances;
+            this.pcolorParametersDistributions;
             this.plotLogProbabilityQC;
             this.histStdOfError;
             this.model.plot;
@@ -73,6 +74,29 @@ classdef BretthorstMcmc < mlbayesian.IMcmcSolver & mlio.AbstractIO
             this.kernel_ = mlbayesian.McmcKernel.main(this.mcmcStruct_);
             this.model_ = this.model_.updateModel(this);
             toc
+        end
+        function pcolorParametersDistributions(this)
+            
+            % histogram sampling phase
+            % histogram parameter distribution
+            figure;
+            krnl = this.kernel_;
+            Np = double(krnl.nParams); 
+            histm = [];
+            for m = 1:Np % rows
+                histn = [];
+                for n = 1:Np % cols
+                    dat   = [krnl.paramsHist(n,:)', krnl.paramsHist(m,:)'];
+                    histn = cat(2, histn, hist3(dat, [this.nBinsHist, this.nBinsHist]), nan(this.nBinsHist, 1));
+                end
+                histm = cat(1, histm, histn, nan(1, Np*(this.nBinsHist+1)));
+            end
+            pcolor(histm);
+            shading interp
+            axis square
+            axis ij
+            axis off
+            this.titleParametersDisributions; 
         end
         function plotAnnealing(this)
             %% PLOTANNEALING
@@ -154,7 +178,7 @@ classdef BretthorstMcmc < mlbayesian.IMcmcSolver & mlio.AbstractIO
  			%% BRETTHORSTMCMC
             
             ip = inputParser;
-            addParameter(ip, 'model', mlanalysis.NullModel('solverClass', class(this)), @(x) isa(x, 'mlanalysis.IModel'));
+            addParameter(ip, 'model', mlbayesian.NullModel('solverClass', class(this)), @(x) isa(x, 'mlbayesian.IBretthorstModel'));
             addParameter(ip, 'datedFilename', true, @islogical);
             parse(ip, varargin{:});
             this.model = ip.Results.model;  
@@ -182,12 +206,6 @@ classdef BretthorstMcmc < mlbayesian.IMcmcSolver & mlio.AbstractIO
         function varargout = adjustParams__(this, varargin)
             varargout{:} = this.model_.kernel.adjustParams(varargin{:});
         end
-        function varargout = objectiveFunc__(this, varargin)
-            varargout{:} = this.model_.kernel.objectiveFunc(varargin{:});
-        end
-        function varargout = parameterIndexToName__(this, varargin)
-            varargout{:} = this.model_.parameterIndexToName(varargin{:});
-        end
         function c = colorVariation(~, k, kmax)
             c   = [rvar(k/kmax) gvar(k/kmax) bvar(k/kmax)];
             
@@ -201,6 +219,16 @@ classdef BretthorstMcmc < mlbayesian.IMcmcSolver & mlio.AbstractIO
             function b = bvar(x)
                 b = exp(-(x - 0.8333)^2/(0.0556));
             end
+        end
+        function varargout = objectiveFunc__(this, varargin)
+            varargout{:} = this.model_.kernel.objectiveFunc(varargin{:});
+        end
+        function varargout = parameterIndexToName__(this, varargin)
+            varargout{:} = this.model_.parameterIndexToName(varargin{:});
+        end
+        function titleParametersDisributions(this)
+            ti = cell2str(this.parameterIndexToName__(1:length(this.model_.modelParameters)), 'AsRow', true);
+            title(sprintf('[%s]^T  x  [%s]', ti, ti)); 
         end
     end
 

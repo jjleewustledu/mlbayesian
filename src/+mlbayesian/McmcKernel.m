@@ -14,7 +14,7 @@ classdef McmcKernel
         N_SIGMAS    = 10   % of normal distribution to use for range [min, max] of parameters
     end
     
-	properties 		
+	properties
         annealingAvpar
         annealingSdpar
         annealingInitz
@@ -47,7 +47,7 @@ classdef McmcKernel
 	methods
  		function this = McmcKernel(mcmcs)
  			%% MCMCKERNEL
-            %  @param mcmcStruct is a struct
+            %  @param mcmcs is a struct
             
             assert(isstruct(mcmcs));
             this.mcmcStruct_    = mcmcs;   

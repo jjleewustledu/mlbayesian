@@ -1,4 +1,4 @@
-classdef IMcmcSolver < mlanalysis.ISolver
+classdef IMcmcSolver < mlbayesian.ISolver
 	%% IMCMCSOLVER  
 
 	%  $Revision$

@@ -1,4 +1,4 @@
-classdef NullKernel 
+classdef NullKernel < mlbayesian.IKernel
 	%% NULLKERNEL  
 
 	%  $Revision$

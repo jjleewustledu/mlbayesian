@@ -90,7 +90,7 @@ classdef Test_BretthorstMcmc < matlab.unittest.TestCase
             this.pwd0 = pushd(this.home);
  			this.testObj_ = BretthorstMcmc;
             this.testObj_.showAnnealing = false;
-            this.testObj_.showBeta = false;
+            this.testObj_.showBeta = true;
             this.addTeardown(@this.cleanFiles);
  		end
 	end
