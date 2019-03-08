@@ -154,7 +154,7 @@ classdef NullModel < mlbayesian.IBretthorstModel & mlio.AbstractIO
             this.filepath_ = pwd;
             this.fileprefix_ = strrep(class(this), '.', '_');
             if (this.datedFilename_)
-                this.fileprefix_ = [this.fileprefix_ '_' datestr(now, 30)];
+                this.fileprefix_ = [this.fileprefix_ '_' mydatetimestr(now)];
             end
             this.filesuffix_ = '.mat';
         end

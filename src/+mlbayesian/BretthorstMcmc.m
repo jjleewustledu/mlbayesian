@@ -187,7 +187,7 @@ classdef BretthorstMcmc < mlbayesian.IMcmcSolver & mlio.AbstractIO
             %% for mlio.AbstractIO
             this.fileprefix_ = strrep(class(this), '.', '_');
             if (ip.Results.datedFilename)
-                this.fileprefix_ = [this.fileprefix_ '_' datestr(now, 30)];
+                this.fileprefix_ = [this.fileprefix_ '_' mydatetimestr(now)];
             end
             this.filesuffix_ = '.mat';
  		end
