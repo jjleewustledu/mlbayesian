@@ -238,7 +238,7 @@ classdef (Abstract) AbstractBayesianStrategy < handle & mlio.AbstractHandleIO & 
             ip.KeepUnmatched = true;
             addOptional(ip,  'indepData', {}, @iscell); 
             addOptional(ip,  'depData', {}, @iscell);
-            addParameter(ip, 'sessionData', [], @(x) isa(x, 'mlpipeline.SessionData'));
+            addParameter(ip, 'sessionData', [], @(x) isa(x, 'mlpipeline.ISessionData'));
             addParameter(ip, 'mcmcParameters', [], @(x) isa(x, 'mlbayesian.IMcmcParameters'));
             addParameter(ip, 'NyquistFreqFactor', 2, @(x) isnumeric(x) && x > 1);
             parse(ip, varargin{:});            
