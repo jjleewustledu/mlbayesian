@@ -272,7 +272,7 @@ classdef GeneralizedGammaStrategy < mlbayesian.AbstractMcmcStrategy
                 this.a2, this.b2, this.p2, this.t02, ...
                 this.weight1, this.S, this.k, this.t0, this.times{1}, this.mapParams, this.keysParams_);
         end   
-        function sse  = sumSquaredErrors(this, p)
+        function loss  = sumSquaredErrors(this, p)
             %% SUMSQUAREDERRORS returns the sum-of-square residuals for all cells of this.dependentData and 
             %  corresponding this.estimateDataFast.  Compared to AbstractMcmcStrategy.sumSquaredErrors, this 
             %  overriding implementation weights of the log-likelihood with Jeffrey's prior according to this.independentData.
@@ -280,16 +280,16 @@ classdef GeneralizedGammaStrategy < mlbayesian.AbstractMcmcStrategy
             %             mlkinetics.AbstractKinetics.jeffreysPrior.
             
             p   = num2cell(p);
-            sse = 0;
+            loss = 0;
             edf = this.estimateDataFast(p{:});
             for iidx = 1:length(this.dependentData)
-                sse = sse + ...
+                loss = loss + ...
                       sum( (this.dependentData{iidx} - edf{iidx}).^2 ); % .* ...
                             %mlbayesian.AbstractBayesianStrategy.slide( ...
                             %    this.jeffreysPrior{iidx}, this.independentData{iidx}, this.t01) );
             end
-            if (sse < 10*eps)
-                sse = sse + (1 + rand(1))*10*eps; 
+            if (loss < 10*eps)
+                loss = loss + (1 + rand(1))*10*eps; 
             end
         end     
 		  

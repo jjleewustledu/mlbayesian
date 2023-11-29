@@ -41,8 +41,8 @@ classdef AbstractVectorBayesianProblem < mlbayesian.IBayesianProblem
             this.normSquaredDependentData_ = norm(this.dependentData)^2;
             assert(all(size(this.independentData) == size(this.dependentData)));
         end 
-        function sse  = sumSquaredErrors(this, p)
-            sse = norm(this.dependentData - this.estimateDataFast(p));
+        function loss  = sumSquaredErrors(this, p)
+            loss = norm(this.dependentData - this.estimateDataFast(p));
         end
         function x    = finalParams(this)
             x = this.bestFitParams;
